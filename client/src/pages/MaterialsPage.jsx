@@ -1,180 +1,139 @@
-// client/src/pages/MaterialsPage.jsx
-import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+import { useEffect, useState } from 'react';
+import axiosInstance from '../utils/axiosInstance';
 
 const MaterialsPage = () => {
   const [materials, setMaterials] = useState([]);
-  const [newMaterial, setNewMaterial] = useState({ name: '', type: '', location: '' });
-  const [editingId, setEditingId] = useState(null);
-  const [editingMaterial, setEditingMaterial] = useState({ name: '', type: '', location: '' });
-
-  const fetchMaterials = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      const res = await axios.get('/api/materials', {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setMaterials(res.data);
-    } catch (err) {
-      console.error('Failed to fetch materials:', err);
-    }
-  };
-
-  const handleAdd = async (e) => {
-    e.preventDefault();
-    try {
-      const token = localStorage.getItem('token');
-      await axios.post('/api/materials', newMaterial, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setNewMaterial({ name: '', type: '', location: '' });
-      fetchMaterials();
-    } catch (err) {
-      console.error('Failed to add material:', err);
-    }
-  };
-
-  const handleDelete = async (id) => {
-    try {
-      const token = localStorage.getItem('token');
-      await axios.delete(`/api/materials/${id}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      fetchMaterials();
-    } catch (err) {
-      console.error('Failed to delete material:', err);
-    }
-  };
-
-  const handleEditClick = (material) => {
-    setEditingId(material._id);
-    setEditingMaterial({
-      name: material.name,
-      type: material.type,
-      location: material.location,
-    });
-  };
-
-  const handleEditChange = (e) => {
-    setEditingMaterial({ ...editingMaterial, [e.target.name]: e.target.value });
-  };
-
-  const handleUpdate = async (id) => {
-    try {
-      const token = localStorage.getItem('token');
-      await axios.put(`/api/materials/${id}`, editingMaterial, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setEditingId(null);
-      fetchMaterials();
-    } catch (err) {
-      console.error('Failed to update material:', err);
-    }
-  };
+  const [newMaterial, setNewMaterial] = useState({
+    name: '',
+    type: '',
+    quantity: 0,
+    location: '',
+    notes: '' // ✅ added
+  });
 
   useEffect(() => {
+    const fetchMaterials = async () => {
+      try {
+        const res = await axiosInstance.get('/materials');
+        setMaterials(res.data);
+      } catch (err) {
+        console.error('Failed to fetch materials:', err);
+      }
+    };
+
     fetchMaterials();
   }, []);
 
+  const handleInputChange = (e) => {
+    setNewMaterial({ ...newMaterial, [e.target.name]: e.target.value });
+  };
+
+  const handleAddMaterial = async () => {
+    try {
+      const res = await axiosInstance.post('/materials', {
+        name: newMaterial.name,
+        type: newMaterial.type,
+        quantity: Number(newMaterial.quantity),
+        location: newMaterial.location,
+        notes: newMaterial.notes || ''
+      });
+      setMaterials((prev) => [...prev, res.data]);
+      setNewMaterial({
+        name: '',
+        type: '',
+        quantity: 0,
+        location: '',
+        notes: ''
+      });
+    } catch (err) {
+      if (err.response) {
+        console.error('Failed to add material:', err.response.data);
+        alert(`Failed: ${err.response.data.message}`);
+      } else {
+        console.error('Error:', err);
+        alert('An error occurred.');
+      }
+    }
+  };
+
   return (
-    <div className="p-4">
-      <h2 className="text-2xl font-bold mb-4">Materials</h2>
+    <div className="max-w-6xl mx-auto p-6">
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-3xl font-bold text-gray-800">📦 Materials Inventory</h1>
+      </div>
 
-      <form onSubmit={handleAdd} className="mb-4 space-y-2">
-        <input
-          type="text"
-          placeholder="Name"
-          value={newMaterial.name}
-          onChange={(e) => setNewMaterial({ ...newMaterial, name: e.target.value })}
-          className="border p-2 w-full"
-          required
-        />
-        <input
-          type="text"
-          placeholder="Type"
-          value={newMaterial.type}
-          onChange={(e) => setNewMaterial({ ...newMaterial, type: e.target.value })}
-          className="border p-2 w-full"
-          required
-        />
-        <input
-          type="text"
-          placeholder="Location"
-          value={newMaterial.location}
-          onChange={(e) => setNewMaterial({ ...newMaterial, location: e.target.value })}
-          className="border p-2 w-full"
-          required
-        />
-        <button type="submit" className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">
-          Add Material
-        </button>
-      </form>
+      {/* Add Material Form */}
+      <div className="mb-6 p-4 border rounded shadow">
+        <h2 className="text-xl font-semibold mb-2">Add New Material</h2>
+        <div className="flex flex-wrap gap-4">
+          <input
+            name="name"
+            value={newMaterial.name}
+            onChange={handleInputChange}
+            placeholder="Material Name"
+            className="border p-2 flex-1"
+          />
+          <input
+            name="type"
+            value={newMaterial.type}
+            onChange={handleInputChange}
+            placeholder="Material Type"
+            className="border p-2 flex-1"
+          />
+          <input
+            name="quantity"
+            type="number"
+            value={newMaterial.quantity}
+            onChange={handleInputChange}
+            placeholder="Quantity"
+            className="border p-2 w-32"
+          />
+          <input
+            name="location"
+            value={newMaterial.location}
+            onChange={handleInputChange}
+            placeholder="Location ID"
+            className="border p-2 flex-1"
+          />
+          <input
+            name="notes"
+            value={newMaterial.notes}
+            onChange={handleInputChange}
+            placeholder="Notes"
+            className="border p-2 flex-1"
+          />
+          <button
+            onClick={handleAddMaterial}
+            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded"
+          >
+            + Add
+          </button>
+        </div>
+      </div>
 
-      <ul className="space-y-2">
-        {materials.map((mat) => (
-          <li key={mat._id} className="border p-2 rounded bg-gray-100">
-            {editingId === mat._id ? (
-              <div className="space-y-2">
-                <input
-                  type="text"
-                  name="name"
-                  value={editingMaterial.name}
-                  onChange={handleEditChange}
-                  className="border p-1 w-full"
-                />
-                <input
-                  type="text"
-                  name="type"
-                  value={editingMaterial.type}
-                  onChange={handleEditChange}
-                  className="border p-1 w-full"
-                />
-                <input
-                  type="text"
-                  name="location"
-                  value={editingMaterial.location}
-                  onChange={handleEditChange}
-                  className="border p-1 w-full"
-                />
-                <div className="flex space-x-2">
-                  <button
-                    onClick={() => handleUpdate(mat._id)}
-                    className="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600"
-                  >
-                    Save
-                  </button>
-                  <button
-                    onClick={() => setEditingId(null)}
-                    className="bg-gray-500 text-white px-3 py-1 rounded hover:bg-gray-600"
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <div className="flex justify-between items-center">
-                <div>
-                  <strong>{mat.name}</strong> — {mat.type}, {mat.location}
-                </div>
-                <div className="space-x-2">
-                  <button
-                    onClick={() => handleEditClick(mat)}
-                    className="text-blue-500 hover:underline"
-                  >
-                    Edit
-                  </button>
-                  <button
-                    onClick={() => handleDelete(mat._id)}
-                    className="text-red-500 hover:underline"
-                  >
-                    Delete
-                  </button>
-                </div>
-              </div>
-            )}
-          </li>
-        ))}
-      </ul>
+      {/* Table Display */}
+      <div className="overflow-x-auto rounded-lg shadow border border-gray-200">
+        <table className="min-w-full bg-white">
+          <thead className="bg-gray-100 text-left text-gray-600 text-sm uppercase tracking-wider">
+            <tr>
+              <th className="px-4 py-3 border-b">Name</th>
+              <th className="px-4 py-3 border-b">Type</th>
+              <th className="px-4 py-3 border-b">Quantity</th>
+              <th className="px-4 py-3 border-b">Location</th>
+            </tr>
+          </thead>
+          <tbody>
+            {materials.map((mat) => (
+              <tr key={mat._id} className="hover:bg-gray-50">
+                <td className="px-4 py-3 border-b">{mat.name}</td>
+                <td className="px-4 py-3 border-b">{mat.type}</td>
+                <td className="px-4 py-3 border-b">{mat.quantity}</td>
+                <td className="px-4 py-3 border-b">{mat.location?.name || mat.location || 'N/A'}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 };

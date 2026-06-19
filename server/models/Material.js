@@ -1,4 +1,5 @@
-const mongoose = require('mongoose');
+// server/models/Material.js
+import mongoose from 'mongoose';
 
 const materialSchema = new mongoose.Schema(
   {
@@ -16,7 +17,8 @@ const materialSchema = new mongoose.Schema(
       default: 0,
     },
     location: {
-      type: String,
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Location',
       required: true,
     },
     notes: {
@@ -28,4 +30,5 @@ const materialSchema = new mongoose.Schema(
   }
 );
 
-module.exports = mongoose.model('Material', materialSchema);
+const Material = mongoose.model('Material', materialSchema);
+export default Material;

@@ -1,5 +1,6 @@
+// client/src/pages/LocationsPage.jsx
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+import axiosInstance from '../utils/axiosInstance';
 
 const LocationsPage = () => {
   const [locations, setLocations] = useState([]);
@@ -9,10 +10,7 @@ const LocationsPage = () => {
 
   const fetchLocations = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const res = await axios.get('/api/locations', {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await axiosInstance.get('/locations');
       setLocations(res.data);
     } catch (err) {
       console.error('Failed to fetch locations:', err);
@@ -22,12 +20,7 @@ const LocationsPage = () => {
   const handleAdd = async (e) => {
     e.preventDefault();
     try {
-      const token = localStorage.getItem('token');
-      await axios.post(
-        '/api/locations',
-        { name: newName },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      await axiosInstance.post('/locations', { name: newName });
       setNewName('');
       fetchLocations();
     } catch (err) {
@@ -47,12 +40,7 @@ const LocationsPage = () => {
 
   const handleSave = async (id) => {
     try {
-      const token = localStorage.getItem('token');
-      await axios.put(
-        `/api/locations/${id}`,
-        { name: editName },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      await axiosInstance.put(`/locations/${id}`, { name: editName });
       setEditingId(null);
       setEditName('');
       fetchLocations();
@@ -63,10 +51,7 @@ const LocationsPage = () => {
 
   const handleDelete = async (id) => {
     try {
-      const token = localStorage.getItem('token');
-      await axios.delete(`/api/locations/${id}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      await axiosInstance.delete(`/locations/${id}`);
       fetchLocations();
     } catch (err) {
       console.error('Failed to delete location:', err);

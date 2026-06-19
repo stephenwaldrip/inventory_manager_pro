@@ -1,87 +1,104 @@
-import { useEffect, useState, useContext } from 'react';
+// src/pages/UsersPage.jsx
+import React, { useEffect, useState, useContext } from 'react';
 import axios from 'axios';
 import { AuthContext } from '../context/AuthContext';
 
 const UsersPage = () => {
-  const [users, setUsers] = useState([]);
   const { user } = useContext(AuthContext);
+  const [users, setUsers] = useState([]);
+  const [formData, setFormData] = useState({ username: '', email: '', password: '', role: 'user' });
 
   useEffect(() => {
     const fetchUsers = async () => {
       try {
         const res = await axios.get('/api/users', {
-          headers: { Authorization: `Bearer ${user.token}` },
+          headers: { Authorization: `Bearer ${user?.token}` },
         });
         setUsers(res.data);
       } catch (err) {
-        console.error('Failed to fetch users:', err);
+        console.error('Failed to fetch users', err);
       }
     };
 
-    fetchUsers();
+    if (user?.role === 'admin') {
+      fetchUsers();
+    }
   }, [user]);
 
-  const handleRoleChange = async (id, newRole) => {
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
     try {
-      await axios.put(`/api/users/${id}/role`, { role: newRole }, {
-        headers: { Authorization: `Bearer ${user.token}` },
+      const res = await axios.post('/api/auth/register', formData, {
+        headers: { Authorization: `Bearer ${user?.token}` },
       });
-      setUsers(users.map(u => u._id === id ? { ...u, role: newRole } : u));
+      alert('User added!');
+      setFormData({ username: '', email: '', password: '', role: 'user' });
+      setUsers(prev => [...prev, res.data.user || {}]);
     } catch (err) {
-      console.error('Failed to update role:', err);
+      console.error(err);
+      alert('Failed to add user.');
     }
   };
 
-  const handleDelete = async (id) => {
-    try {
-      await axios.delete(`/api/users/${id}`, {
-        headers: { Authorization: `Bearer ${user.token}` },
-      });
-      setUsers(users.filter(u => u._id !== id));
-    } catch (err) {
-      console.error('Failed to delete user:', err);
-    }
-  };
+  if (user?.role !== 'admin') {
+    return <p>Access Denied. Admins only.</p>;
+  }
 
   return (
-    <div className="p-4">
-      <h2 className="text-2xl font-bold mb-4">Users</h2>
-      <table className="w-full border">
-        <thead>
-          <tr className="bg-gray-100">
-            <th className="p-2">Name</th>
-            <th>Email</th>
-            <th>Role</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {users.map(u => (
-            <tr key={u._id} className="border-t">
-              <td className="p-2">{u.name}</td>
-              <td>{u.email}</td>
-              <td>
-                <select
-                  value={u.role}
-                  onChange={e => handleRoleChange(u._id, e.target.value)}
-                  className="border rounded"
-                >
-                  <option value="user">User</option>
-                  <option value="admin">Admin</option>
-                </select>
-              </td>
-              <td>
-                <button
-                  onClick={() => handleDelete(u._id)}
-                  className="text-red-500 hover:underline"
-                >
-                  Delete
-                </button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+    <div>
+      <h2 className="text-xl font-bold mb-4">User Management</h2>
+
+      <form onSubmit={handleSubmit} className="mb-6 space-y-2">
+        <input
+          name="username"
+          placeholder="Username"
+          value={formData.username}
+          onChange={handleChange}
+          className="border p-2 block w-full"
+          required
+        />
+        <input
+          name="email"
+          type="email"
+          placeholder="Email"
+          value={formData.email}
+          onChange={handleChange}
+          className="border p-2 block w-full"
+          required
+        />
+        <input
+          name="password"
+          type="password"
+          placeholder="Password"
+          value={formData.password}
+          onChange={handleChange}
+          className="border p-2 block w-full"
+          required
+        />
+        <select
+          name="role"
+          value={formData.role}
+          onChange={handleChange}
+          className="border p-2 block w-full"
+        >
+          <option value="user">User</option>
+          <option value="admin">Admin</option>
+        </select>
+        <button type="submit" className="bg-blue-500 text-white py-2 px-4 rounded">
+          Add User
+        </button>
+      </form>
+
+      <h3 className="font-semibold mb-2">Existing Users:</h3>
+      <ul>
+        {users.map((u) => (
+          <li key={u._id}>{u.username} ({u.email}) - {u.role}</li>
+        ))}
+      </ul>
     </div>
   );
 };

@@ -1,25 +1,23 @@
-const express = require('express');
-const router = express.Router();
-
-const {
+// server/routes/materialsRoutes.js
+import express from 'express';
+import {
   getMaterials,
   createMaterial,
   getMaterialById,
   updateMaterial,
   deleteMaterial,
-} = require('../controllers/materialsController');
+} from '../controllers/materialsController.js';
+import { protect } from '../middleware/authMiddleware.js';
 
-const { protect, adminOnly } = require('../middleware/authMiddleware');
+const router = express.Router();
 
-// GET all materials, POST a new material
 router.route('/')
   .get(protect, getMaterials)
   .post(protect, createMaterial);
 
-// GET by ID, PUT to update, DELETE with admin only
 router.route('/:id')
   .get(protect, getMaterialById)
   .put(protect, updateMaterial)
-  .delete(protect, adminOnly, deleteMaterial);
+  .delete(protect, deleteMaterial);
 
-module.exports = router;
+export default router;

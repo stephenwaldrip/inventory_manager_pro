@@ -1,30 +1,42 @@
-import { Routes, Route } from 'react-router-dom';
-import HomePage from './pages/HomePage';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { AuthProvider } from './context/AuthContext';  // ADD THIS
 import LoginPage from './pages/LoginPage';
-import RegisterPage from './pages/RegisterPage';
+import MaterialsPage from './pages/MaterialsPage';
 import UsersPage from './pages/UsersPage';
-import AdminRoute from './components/AdminRoute';
+import LocationsPage from './pages/LocationsPage';
+import CategoriesPage from './pages/CategoriesPage';
+import DashboardPage from './pages/DashboardPage';
+import Layout from './components/Layout.js';
 
 function App() {
-  return (
-    <div className="App">
-      <Routes>
-        {/* Public Routes */}
-        <Route path="/" element={<HomePage />} />
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/register" element={<RegisterPage />} />
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
-        {/* Admin-Protected Route */}
-        <Route
-          path="/users"
-          element={
-            <AdminRoute>
-              <UsersPage />
-            </AdminRoute>
-          }
-        />
-      </Routes>
-    </div>
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    setIsAuthenticated(!!token);
+  }, []);
+
+  const PrivateRoute = ({ element }) => {
+    return isAuthenticated ? element : <Navigate to="/login" />;
+  };
+
+  return (
+    <AuthProvider>  {/* ADD THIS */}
+      <Router>
+        <Routes>
+          <Route path="/login" element={<LoginPage />} />
+          
+          <Route element={<Layout />}>
+            <Route path="/" element={<PrivateRoute element={<DashboardPage />} />} />
+            <Route path="/materials" element={<PrivateRoute element={<MaterialsPage />} />} />
+            <Route path="/users" element={<PrivateRoute element={<UsersPage />} />} />
+            <Route path="/locations" element={<PrivateRoute element={<LocationsPage />} />} />
+            <Route path="/categories" element={<PrivateRoute element={<CategoriesPage />} />} />
+          </Route>
+        </Routes>
+      </Router>
+    </AuthProvider>
   );
 }
 

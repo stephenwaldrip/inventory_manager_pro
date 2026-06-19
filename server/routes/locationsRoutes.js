@@ -1,23 +1,22 @@
-const express = require('express');
-const router = express.Router();
-const {
-  createLocation,
+// server/routes/locationsRoutes.js
+import express from 'express';
+import {
   getLocations,
   getLocationById,
+  createLocation,
   updateLocation,
-  deleteLocation
-} = require('../controllers/locationsController');
+  deleteLocation,
+} from '../controllers/locationsController.js';
 
-const { protect, adminOnly } = require('../middleware/authMiddleware');
+const router = express.Router();
 
-// Routes
 router.route('/')
-  .post(protect, createLocation)
-  .get(protect, getLocations);
+  .get(getLocations)
+  .post(createLocation);
 
 router.route('/:id')
-  .get(protect, getLocationById)
-  .put(protect, updateLocation)
-  .delete(protect, adminOnly, deleteLocation);
+  .get(getLocationById)
+  .put(updateLocation)
+  .delete(deleteLocation);
 
-module.exports = router;
+export default router;

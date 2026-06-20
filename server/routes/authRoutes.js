@@ -1,4 +1,3 @@
-// server/routes/authRoutes.js
 import express from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
@@ -6,7 +5,6 @@ import User from '../models/User.js';
 
 const router = express.Router();
 
-// POST /api/auth/register
 router.post('/register', async (req, res) => {
   const { name, username, email, password, role } = req.body;
 
@@ -14,8 +12,7 @@ router.post('/register', async (req, res) => {
     const existingUser = await User.findOne({ email });
     if (existingUser) return res.status(400).json({ message: 'User already exists' });
 
-    const hashedPassword = await bcrypt.hash(password, 10);
-    const user = await User.create({ name, username, email, password: hashedPassword, role });
+    const user = await User.create({ name, username, email, password, role });
 
     const token = jwt.sign({ userId: user._id, role: user.role }, process.env.JWT_SECRET, {
       expiresIn: '1d',
@@ -28,7 +25,6 @@ router.post('/register', async (req, res) => {
   }
 });
 
-// POST /api/auth/login
 router.post('/login', async (req, res) => {
   const { email, password } = req.body;
 

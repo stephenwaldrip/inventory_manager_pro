@@ -4,42 +4,46 @@ import { AuthContext } from '../context/AuthContext';
 
 function DashboardPage() {
   const navigate = useNavigate();
-  const { logout } = useContext(AuthContext);
+  const { user } = useContext(AuthContext);
 
-  const handleLogout = () => {
-    logout();
-    navigate('/login');
-  };
+  const cards = [
+    { label: 'Materials', icon: '🧱', path: '/materials', color: '#3b82f6' },
+    { label: 'Locations', icon: '📍', path: '/locations', color: '#22c55e' },
+    { label: 'Categories', icon: '🗂️', path: '/categories', color: '#f59e0b' },
+    { label: 'Users', icon: '👥', path: '/users', color: '#8b5cf6' },
+  ];
 
   return (
-    <div className="max-w-4xl mx-auto p-8">
-      <h1 className="text-3xl font-bold mb-6">📋 Dashboard</h1>
+    <div>
+      <div style={{ marginBottom: '24px' }}>
+        <h1 style={{ fontSize: '28px', fontWeight: '700', color: '#1e293b' }}>Dashboard</h1>
+        <p style={{ color: '#64748b', marginTop: '4px' }}>
+          Welcome back, {user?.email || 'Admin'}
+        </p>
+      </div>
 
-      <div className="grid grid-cols-2 gap-4">
-        <button
-          className="bg-blue-600 hover:bg-blue-700 text-white py-3 px-6 rounded shadow"
-          onClick={() => navigate('/materials')}
-        >
-          Materials
-        </button>
-        <button
-          className="bg-green-600 hover:bg-green-700 text-white py-3 px-6 rounded shadow"
-          onClick={() => navigate('/locations')}
-        >
-          Locations
-        </button>
-        <button
-          className="bg-purple-600 hover:bg-purple-700 text-white py-3 px-6 rounded shadow"
-          onClick={() => navigate('/users')}
-        >
-          Users
-        </button>
-        <button
-          className="bg-red-600 hover:bg-red-700 text-white py-3 px-6 rounded shadow"
-          onClick={handleLogout}
-        >
-          Logout
-        </button>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '16px' }}>
+        {cards.map((card) => (
+          <div
+            key={card.path}
+            onClick={() => navigate(card.path)}
+            style={{
+              backgroundColor: 'white',
+              borderRadius: '12px',
+              padding: '24px',
+              cursor: 'pointer',
+              boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+              borderLeft: `4px solid ${card.color}`,
+              transition: 'transform 0.2s, box-shadow 0.2s',
+            }}
+            onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-2px)'}
+            onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0)'}
+          >
+            <div style={{ fontSize: '32px', marginBottom: '12px' }}>{card.icon}</div>
+            <div style={{ fontSize: '16px', fontWeight: '600', color: '#1e293b' }}>{card.label}</div>
+            <div style={{ fontSize: '13px', color: '#64748b', marginTop: '4px' }}>View all →</div>
+          </div>
+        ))}
       </div>
     </div>
   );

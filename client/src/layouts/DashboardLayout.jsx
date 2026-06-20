@@ -1,16 +1,13 @@
-// src/layouts/DashboardLayout.jsx
 import React from 'react';
 import { Outlet } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
-import TopBar from '../components/TopBar';
 
 const DashboardLayout = () => {
   return (
-    <div className="flex h-screen">
+    <div style={{ display: 'flex', height: '100vh', backgroundColor: '#f8fafc' }}>
       <Sidebar />
-      <div className="flex-1 flex flex-col">
-        <TopBar />
-        <main className="p-4 overflow-y-auto flex-1">
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+        <main style={{ flex: 1, overflowY: 'auto', padding: '24px' }}>
           <Outlet />
         </main>
       </div>

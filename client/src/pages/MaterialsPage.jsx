@@ -4,11 +4,7 @@ import axiosInstance from '../utils/axiosInstance';
 const MaterialsPage = () => {
   const [materials, setMaterials] = useState([]);
   const [newMaterial, setNewMaterial] = useState({
-    name: '',
-    type: '',
-    quantity: 0,
-    location: '',
-    notes: '' // ✅ added
+    name: '', type: '', quantity: 0, location: '', notes: ''
   });
 
   useEffect(() => {
@@ -20,7 +16,6 @@ const MaterialsPage = () => {
         console.error('Failed to fetch materials:', err);
       }
     };
-
     fetchMaterials();
   }, []);
 
@@ -38,99 +33,109 @@ const MaterialsPage = () => {
         notes: newMaterial.notes || ''
       });
       setMaterials((prev) => [...prev, res.data]);
-      setNewMaterial({
-        name: '',
-        type: '',
-        quantity: 0,
-        location: '',
-        notes: ''
-      });
+      setNewMaterial({ name: '', type: '', quantity: 0, location: '', notes: '' });
     } catch (err) {
       if (err.response) {
-        console.error('Failed to add material:', err.response.data);
         alert(`Failed: ${err.response.data.message}`);
       } else {
-        console.error('Error:', err);
         alert('An error occurred.');
       }
     }
   };
 
+  const inputStyle = {
+    padding: '8px 12px',
+    borderRadius: '6px',
+    border: '1px solid #e2e8f0',
+    fontSize: '14px',
+    outline: 'none',
+    flex: 1,
+  };
+
   return (
-    <div className="max-w-6xl mx-auto p-6">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold text-gray-800">📦 Materials Inventory</h1>
+    <div>
+      <div style={{ marginBottom: '24px' }}>
+        <h1 style={{ fontSize: '28px', fontWeight: '700', color: '#1e293b' }}>Materials</h1>
+        <p style={{ color: '#64748b', marginTop: '4px' }}>Manage your materials inventory</p>
       </div>
 
       {/* Add Material Form */}
-      <div className="mb-6 p-4 border rounded shadow">
-        <h2 className="text-xl font-semibold mb-2">Add New Material</h2>
-        <div className="flex flex-wrap gap-4">
-          <input
-            name="name"
-            value={newMaterial.name}
-            onChange={handleInputChange}
-            placeholder="Material Name"
-            className="border p-2 flex-1"
-          />
-          <input
-            name="type"
-            value={newMaterial.type}
-            onChange={handleInputChange}
-            placeholder="Material Type"
-            className="border p-2 flex-1"
-          />
-          <input
-            name="quantity"
-            type="number"
-            value={newMaterial.quantity}
-            onChange={handleInputChange}
-            placeholder="Quantity"
-            className="border p-2 w-32"
-          />
-          <input
-            name="location"
-            value={newMaterial.location}
-            onChange={handleInputChange}
-            placeholder="Location ID"
-            className="border p-2 flex-1"
-          />
-          <input
-            name="notes"
-            value={newMaterial.notes}
-            onChange={handleInputChange}
-            placeholder="Notes"
-            className="border p-2 flex-1"
-          />
+      <div style={{
+        backgroundColor: 'white',
+        borderRadius: '12px',
+        padding: '24px',
+        boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+        marginBottom: '24px',
+      }}>
+        <h2 style={{ fontSize: '16px', fontWeight: '600', color: '#1e293b', marginBottom: '16px' }}>
+          Add New Material
+        </h2>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px' }}>
+          <input style={inputStyle} name="name" value={newMaterial.name} onChange={handleInputChange} placeholder="Material Name" />
+          <input style={inputStyle} name="type" value={newMaterial.type} onChange={handleInputChange} placeholder="Material Type" />
+          <input style={{ ...inputStyle, flex: 'none', width: '100px' }} name="quantity" type="number" value={newMaterial.quantity} onChange={handleInputChange} placeholder="Qty" />
+          <input style={inputStyle} name="location" value={newMaterial.location} onChange={handleInputChange} placeholder="Location ID" />
+          <input style={inputStyle} name="notes" value={newMaterial.notes} onChange={handleInputChange} placeholder="Notes" />
           <button
             onClick={handleAddMaterial}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded"
+            style={{
+              padding: '8px 20px',
+              backgroundColor: '#3b82f6',
+              color: 'white',
+              border: 'none',
+              borderRadius: '6px',
+              cursor: 'pointer',
+              fontSize: '14px',
+              fontWeight: '600',
+            }}
           >
             + Add
           </button>
         </div>
       </div>
 
-      {/* Table Display */}
-      <div className="overflow-x-auto rounded-lg shadow border border-gray-200">
-        <table className="min-w-full bg-white">
-          <thead className="bg-gray-100 text-left text-gray-600 text-sm uppercase tracking-wider">
-            <tr>
-              <th className="px-4 py-3 border-b">Name</th>
-              <th className="px-4 py-3 border-b">Type</th>
-              <th className="px-4 py-3 border-b">Quantity</th>
-              <th className="px-4 py-3 border-b">Location</th>
+      {/* Table */}
+      <div style={{
+        backgroundColor: 'white',
+        borderRadius: '12px',
+        boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+        overflow: 'hidden',
+      }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+          <thead>
+            <tr style={{ backgroundColor: '#f8fafc' }}>
+              {['Name', 'Type', 'Quantity', 'Location', 'Notes'].map((h) => (
+                <th key={h} style={{
+                  padding: '12px 16px',
+                  textAlign: 'left',
+                  fontSize: '12px',
+                  fontWeight: '600',
+                  color: '#64748b',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.05em',
+                  borderBottom: '1px solid #e2e8f0',
+                }}>{h}</th>
+              ))}
             </tr>
           </thead>
           <tbody>
-            {materials.map((mat) => (
-              <tr key={mat._id} className="hover:bg-gray-50">
-                <td className="px-4 py-3 border-b">{mat.name}</td>
-                <td className="px-4 py-3 border-b">{mat.type}</td>
-                <td className="px-4 py-3 border-b">{mat.quantity}</td>
-                <td className="px-4 py-3 border-b">{mat.location?.name || mat.location || 'N/A'}</td>
+            {materials.length === 0 ? (
+              <tr>
+                <td colSpan="5" style={{ padding: '24px', textAlign: 'center', color: '#94a3b8' }}>
+                  No materials yet. Add one above!
+                </td>
               </tr>
-            ))}
+            ) : (
+              materials.map((mat, i) => (
+                <tr key={mat._id} style={{ backgroundColor: i % 2 === 0 ? 'white' : '#f8fafc' }}>
+                  <td style={{ padding: '12px 16px', fontSize: '14px', color: '#1e293b', borderBottom: '1px solid #e2e8f0' }}>{mat.name}</td>
+                  <td style={{ padding: '12px 16px', fontSize: '14px', color: '#64748b', borderBottom: '1px solid #e2e8f0' }}>{mat.type}</td>
+                  <td style={{ padding: '12px 16px', fontSize: '14px', color: '#64748b', borderBottom: '1px solid #e2e8f0' }}>{mat.quantity}</td>
+                  <td style={{ padding: '12px 16px', fontSize: '14px', color: '#64748b', borderBottom: '1px solid #e2e8f0' }}>{mat.location?.name || mat.location || 'N/A'}</td>
+                  <td style={{ padding: '12px 16px', fontSize: '14px', color: '#64748b', borderBottom: '1px solid #e2e8f0' }}>{mat.notes || '—'}</td>
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
       </div>

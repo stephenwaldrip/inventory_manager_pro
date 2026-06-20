@@ -1,29 +1,88 @@
-// src/components/Sidebar.jsx
 import React, { useContext } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 
 const Sidebar = () => {
-  const { user } = useContext(AuthContext);
+  const { user, logout } = useContext(AuthContext);
+  const location = useLocation();
+
+  const navItems = [
+    { path: '/', label: 'Dashboard', icon: '📊' },
+    { path: '/materials', label: 'Materials', icon: '🧱' },
+    { path: '/locations', label: 'Locations', icon: '📍' },
+    { path: '/categories', label: 'Categories', icon: '🗂️' },
+    { path: '/users', label: 'Users', icon: '👥' },
+  ];
+
+  const linkStyle = (path) => ({
+    display: 'flex',
+    alignItems: 'center',
+    gap: '10px',
+    padding: '10px 16px',
+    borderRadius: '8px',
+    textDecoration: 'none',
+    color: location.pathname === path ? '#ffffff' : '#94a3b8',
+    backgroundColor: location.pathname === path ? '#3b82f6' : 'transparent',
+    marginBottom: '4px',
+    fontSize: '14px',
+    fontWeight: location.pathname === path ? '600' : '400',
+    transition: 'all 0.2s',
+  });
 
   return (
-    <div className="w-64 bg-gray-800 text-white p-4">
-      <h2 className="text-2xl font-bold mb-6">Inventory Manager Pro</h2>
-      <ul>
-        <li className="mb-2"><Link to="/">Dashboard</Link></li>
-        <li className="mb-2"><Link to="/materials">Materials</Link></li>
-        <li className="mb-2"><Link to="/locations">Locations</Link></li>
-        <li className="mb-2"><Link to="/categories">Categories</Link></li>
-        <li className="mb-2"><Link to="/users">Users</Link></li>
+    <div style={{
+      width: '240px',
+      backgroundColor: '#1e293b',
+      display: 'flex',
+      flexDirection: 'column',
+      padding: '24px 16px',
+      flexShrink: 0,
+    }}>
+      <div style={{ marginBottom: '32px' }}>
+        <h1 style={{ color: '#ffffff', fontSize: '16px', fontWeight: '700', lineHeight: '1.3' }}>
+          📦 Inventory Manager Pro
+        </h1>
+      </div>
+
+      <nav style={{ flex: 1 }}>
+        {navItems.map((item) => (
+          <Link key={item.path} to={item.path} style={linkStyle(item.path)}>
+            <span>{item.icon}</span>
+            <span>{item.label}</span>
+          </Link>
+        ))}
 
         {user?.role === 'admin' && (
-          <li className="mb-2"><Link to="/add-user">Add User</Link></li> // ✅ Admin only
+          <Link to="/add-user" style={linkStyle('/add-user')}>
+            <span>➕</span>
+            <span>Add User</span>
+          </Link>
         )}
+      </nav>
 
-        <li className="mt-6 text-sm text-gray-400">
-          Logged in as: {user?.username || 'Guest'} ({user?.role || 'none'})
-        </li>
-      </ul>
+      <div style={{ borderTop: '1px solid #334155', paddingTop: '16px' }}>
+        <p style={{ color: '#64748b', fontSize: '12px', marginBottom: '8px' }}>
+          {user?.email || 'Guest'}
+        </p>
+        <p style={{ color: '#64748b', fontSize: '12px', marginBottom: '12px', textTransform: 'capitalize' }}>
+          Role: {user?.role || 'none'}
+        </p>
+        <button
+          onClick={logout}
+          style={{
+            width: '100%',
+            padding: '8px',
+            backgroundColor: '#ef4444',
+            color: 'white',
+            border: 'none',
+            borderRadius: '6px',
+            cursor: 'pointer',
+            fontSize: '13px',
+          }}
+        >
+          Logout
+        </button>
+      </div>
     </div>
   );
 };

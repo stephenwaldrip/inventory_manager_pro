@@ -21,7 +21,8 @@ const RegisterPage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const res = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:5000/api'}/auth/register`, {
+      const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+      const res = await fetch(apiUrl + '/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...formData, role: 'admin' }),
@@ -71,3 +72,11 @@ const RegisterPage = () => {
           <input style={inputStyle} type="text" name="username" placeholder="Username" onChange={handleChange} required />
           <input style={inputStyle} type="email" name="email" placeholder="Email" onChange={handleChange} required />
           <input style={inputStyle} type="password" name="password" placeholder="Password" onChange={handleChange} required />
+          <button style={buttonStyle} type="submit">Register</button>
+        </form>
+      </div>
+    </div>
+  );
+};
+
+export default RegisterPage;

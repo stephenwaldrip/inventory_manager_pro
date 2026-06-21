@@ -6,17 +6,20 @@ import User from '../models/User.js';
 const router = express.Router();
 
 router.post('/register', async (req, res) => {
-  const { name, username, email, password, role } = req.body;
+  const { name, email, password } = req.body;
 
   try {
     const existingUser = await User.findOne({ email });
     if (existingUser) return res.status(400).json({ message: 'User already exists' });
 
-    const user = await User.create({ name, username, email, password, role });
+    // Role always defaults to 'user' — never trust client for role
+    const user = await User.create({ name, email, password, role: 'user' });
 
-    const token = jwt.sign({ userId: user._id, role: user.role }, process.env.JWT_SECRET, {
-      expiresIn: '1d',
-    });
+    const token = jwt.sign(
+      { userId: user._id, role: user.role, email: user.email },
+      process.env.JWT_SECRET,
+      { expiresIn: '1d' }
+    );
 
     res.status(201).json({ token, user: { email: user.email, role: user.role } });
   } catch (err) {
@@ -35,9 +38,11 @@ router.post('/login', async (req, res) => {
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) return res.status(401).json({ message: 'Invalid email or password' });
 
-    const token = jwt.sign({ userId: user._id, role: user.role }, process.env.JWT_SECRET, {
-      expiresIn: '1d',
-    });
+    const token = jwt.sign(
+      { userId: user._id, role: user.role, email: user.email },
+      process.env.JWT_SECRET,
+      { expiresIn: '1d' }
+    );
 
     res.json({ token, user: { email: user.email, role: user.role } });
   } catch (err) {

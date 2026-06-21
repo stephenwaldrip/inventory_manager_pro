@@ -21,6 +21,7 @@ app.use(express.json());
 
 // Health check route — keeps Render free tier awake via cron ping
 app.get('/api/health', (req, res) => {
+  console.log(`Health check pinged at ${new Date().toISOString()}`);
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 

@@ -3,6 +3,7 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
 import Activity from '../models/Activity.js';
+import sendEmail from '../utils/sendEmail.js';
 
 const router = express.Router();
 
@@ -21,8 +22,13 @@ router.post('/register', async (req, res) => {
         message: `New user "${email}" registered`,
         user: email,
       });
+      await sendEmail({
+        to: 'stephenwaldrip90@gmail.com',
+        subject: '👤 New User Registered',
+        html: `<p>A new user has registered: <strong>${email}</strong></p>`,
+      });
     } catch (actErr) {
-      console.warn('Activity log failed:', actErr.message);
+      console.warn('Activity/email failed:', actErr.message);
     }
 
     const token = jwt.sign(
@@ -54,8 +60,13 @@ router.post('/login', async (req, res) => {
         message: `"${email}" logged in`,
         user: email,
       });
+      await sendEmail({
+        to: 'stephenwaldrip90@gmail.com',
+        subject: '🔐 User Login',
+        html: `<p><strong>${email}</strong> just logged in to Inventory Manager Pro.</p>`,
+      });
     } catch (actErr) {
-      console.warn('Activity log failed:', actErr.message);
+      console.warn('Activity/email failed:', actErr.message);
     }
 
     const token = jwt.sign(

@@ -1,31 +1,41 @@
-const Location = require('../models/Location');
+import Location from '../models/Location.js';
+import Activity from '../models/Activity.js';
+import sendEmail from '../utils/sendEmail.js';
 
-// @desc    Create new location
-// @route   POST /api/locations
-// @access  Private
+const ADMIN_EMAIL = 'stephenwaldrip90@gmail.com';
+
 const createLocation = async (req, res) => {
   try {
     const { name, description } = req.body;
 
-    if (!name) {
-      return res.status(400).json({ message: 'Name is required' });
-    }
+    if (!name) return res.status(400).json({ message: 'Name is required' });
 
     const locationExists = await Location.findOne({ name });
-    if (locationExists) {
-      return res.status(400).json({ message: 'Location already exists' });
-    }
+    if (locationExists) return res.status(400).json({ message: 'Location already exists' });
 
     const location = await Location.create({ name, description });
+
+    try {
+      await Activity.create({
+        type: 'material_added',
+        message: `Location "${name}" was created`,
+        user: req.user?.email,
+      });
+      await sendEmail({
+        to: ADMIN_EMAIL,
+        subject: '📍 New Location Created',
+        html: `<p><strong>${req.user?.email}</strong> created a new location: <strong>${name}</strong></p>`,
+      });
+    } catch (actErr) {
+      console.warn('Activity/email failed:', actErr.message);
+    }
+
     res.status(201).json(location);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
 
-// @desc    Get all locations
-// @route   GET /api/locations
-// @access  Private
 const getLocations = async (req, res) => {
   try {
     const locations = await Location.find();
@@ -35,54 +45,69 @@ const getLocations = async (req, res) => {
   }
 };
 
-// @desc    Get single location
-// @route   GET /api/locations/:id
-// @access  Private
 const getLocationById = async (req, res) => {
   try {
     const location = await Location.findById(req.params.id);
-    if (!location) {
-      return res.status(404).json({ message: 'Location not found' });
-    }
+    if (!location) return res.status(404).json({ message: 'Location not found' });
     res.json(location);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
 
-// @desc    Update location
-// @route   PUT /api/locations/:id
-// @access  Private
 const updateLocation = async (req, res) => {
   try {
-    const location = await Location.findByIdAndUpdate(req.params.id, req.body, {
-      new: true,
-    });
-    if (!location) {
-      return res.status(404).json({ message: 'Location not found' });
+    const location = await Location.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    if (!location) return res.status(404).json({ message: 'Location not found' });
+
+    try {
+      await Activity.create({
+        type: 'material_updated',
+        message: `Location "${location.name}" was updated`,
+        user: req.user?.email,
+      });
+      await sendEmail({
+        to: ADMIN_EMAIL,
+        subject: '✏️ Location Updated',
+        html: `<p><strong>${req.user?.email}</strong> updated location: <strong>${location.name}</strong></p>`,
+      });
+    } catch (actErr) {
+      console.warn('Activity/email failed:', actErr.message);
     }
+
     res.json(location);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
 
-// @desc    Delete location
-// @route   DELETE /api/locations/:id
-// @access  Private
 const deleteLocation = async (req, res) => {
   try {
     const location = await Location.findByIdAndDelete(req.params.id);
-    if (!location) {
-      return res.status(404).json({ message: 'Location not found' });
+    if (!location) return res.status(404).json({ message: 'Location not found' });
+
+    try {
+      await Activity.create({
+        type: 'material_deleted',
+        message: `Location "${location.name}" was deleted`,
+        user: req.user?.email,
+      });
+      await sendEmail({
+        to: ADMIN_EMAIL,
+        subject: '🗑️ Location Deleted',
+        html: `<p><strong>${req.user?.email}</strong> deleted location: <strong>${location.name}</strong></p>`,
+      });
+    } catch (actErr) {
+      console.warn('Activity/email failed:', actErr.message);
     }
+
     res.json({ message: 'Location deleted' });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
 
-module.exports = {
+export {
   createLocation,
   getLocations,
   getLocationById,

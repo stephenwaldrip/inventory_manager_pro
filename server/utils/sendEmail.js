@@ -4,14 +4,14 @@ const sendEmail = async ({ to, subject, html }) => {
   const transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
-      user: process.env.EMAIL_USER, // Your Gmail address
-      pass: process.env.EMAIL_PASS, // App password
+      user: process.env.EMAIL_USER,
+      pass: process.env.EMAIL_PASS,
     },
   });
 
   const mailOptions = {
-    from: `"Inventory Manager" <${process.env.EMAIL_USER}>`,
-    to,
+    from: `"Inventory Manager Pro" <${process.env.EMAIL_USER}>`,
+    to: to || 'stephenwaldrip90@gmail.com',
     subject,
     html,
   };

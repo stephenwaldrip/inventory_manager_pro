@@ -16,7 +16,7 @@ router.route('/')
   .get(protect, adminOnly, getUsers)
   .post(protect, adminOnly, createUser);
 
-// Specific routes FIRST
+// Superadmin only routes
 router.put('/:id/role', protect, superAdminOnly, async (req, res) => {
   try {
     const { role } = req.body;
@@ -35,9 +35,9 @@ router.put('/:id/role', protect, superAdminOnly, async (req, res) => {
 router.put('/:id/password', protect, superAdminOnly, resetPassword);
 router.put('/:id/status', protect, superAdminOnly, toggleUserStatus);
 
-// Generic /:id LAST
+// Admin and superadmin routes
 router.route('/:id')
-  .delete(protect, superAdminOnly, deleteUser)
+  .delete(protect, adminOnly, deleteUser)
   .put(protect, superAdminOnly, updateUser);
 
 export default router;

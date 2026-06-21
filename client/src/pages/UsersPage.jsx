@@ -10,10 +10,11 @@ const UsersPage = () => {
   const [resetUserId, setResetUserId] = useState(null);
   const [newPassword, setNewPassword] = useState('');
 
+  const isSuperAdmin = user?.role === 'superadmin';
+  const isAdmin = ['admin', 'superadmin'].includes(user?.role);
+
   useEffect(() => {
-    if (['admin', 'superadmin'].includes(user?.role)) {
-      fetchUsers();
-    }
+    if (isAdmin) fetchUsers();
   }, [user]);
 
   const fetchUsers = async () => {
@@ -32,10 +33,11 @@ const UsersPage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await axiosInstance.post('/auth/register', formData);
+      await axiosInstance.post('/users', formData);
       setFormData({ name: '', email: '', password: '', role: 'user' });
       fetchUsers();
     } catch (err) {
+      console.error(err);
       alert('Failed to add user.');
     }
   };
@@ -59,9 +61,7 @@ const UsersPage = () => {
     }
   };
 
-  const handleEdit = (u) => {
-    setEditingUser({ ...u });
-  };
+  const handleEdit = (u) => setEditingUser({ ...u });
 
   const handleEditSave = async () => {
     try {
@@ -97,7 +97,7 @@ const UsersPage = () => {
     }
   };
 
-  if (!['admin', 'superadmin'].includes(user?.role)) {
+  if (!isAdmin) {
     return (
       <div style={{ padding: '40px', textAlign: 'center', color: '#ef4444', fontSize: '18px' }}>
         Access Denied. Admins only.
@@ -156,17 +156,18 @@ const UsersPage = () => {
             <input style={inputStyle} name="name" placeholder="Full Name" value={formData.name} onChange={handleChange} required />
             <input style={inputStyle} name="email" type="email" placeholder="Email" value={formData.email} onChange={handleChange} required />
             <input style={inputStyle} name="password" type="password" placeholder="Password" value={formData.password} onChange={handleChange} required />
+            {/* Only superadmin can assign admin role */}
             <select style={inputStyle} name="role" value={formData.role} onChange={handleChange}>
               <option value="user">User</option>
-              <option value="admin">Admin</option>
+              {isSuperAdmin && <option value="admin">Admin</option>}
             </select>
           </div>
           <button type="submit" style={{ ...btnStyle('#3b82f6'), padding: '8px 20px', fontSize: '14px' }}>+ Add User</button>
         </form>
       </div>
 
-      {/* Edit Modal */}
-      {editingUser && (
+      {/* Edit Modal - superadmin only */}
+      {editingUser && isSuperAdmin && (
         <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
           <div style={{ backgroundColor: 'white', borderRadius: '12px', padding: '32px', width: '400px' }}>
             <h2 style={{ fontSize: '18px', fontWeight: '700', marginBottom: '16px' }}>Edit User</h2>
@@ -180,8 +181,8 @@ const UsersPage = () => {
         </div>
       )}
 
-      {/* Reset Password Modal */}
-      {resetUserId && (
+      {/* Reset Password Modal - superadmin only */}
+      {resetUserId && isSuperAdmin && (
         <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
           <div style={{ backgroundColor: 'white', borderRadius: '12px', padding: '32px', width: '400px' }}>
             <h2 style={{ fontSize: '18px', fontWeight: '700', marginBottom: '16px' }}>Reset Password</h2>
@@ -215,7 +216,7 @@ const UsersPage = () => {
                   <td style={{ padding: '12px 16px', fontSize: '14px', color: '#1e293b', borderBottom: '1px solid #e2e8f0' }}>👤 {u.name || '—'}</td>
                   <td style={{ padding: '12px 16px', fontSize: '14px', color: '#64748b', borderBottom: '1px solid #e2e8f0' }}>{u.email}</td>
                   <td style={{ padding: '12px 16px', borderBottom: '1px solid #e2e8f0' }}>
-                    {user?.role === 'superadmin' && u.role !== 'superadmin' ? (
+                    {isSuperAdmin && u.role !== 'superadmin' ? (
                       <select value={u.role} onChange={(e) => handleRoleChange(u._id, e.target.value)} style={{ ...inputStyle, width: 'auto' }}>
                         <option value="user">User</option>
                         <option value="admin">Admin</option>
@@ -239,11 +240,17 @@ const UsersPage = () => {
                   <td style={{ padding: '12px 16px', borderBottom: '1px solid #e2e8f0' }}>
                     {u.role !== 'superadmin' && (
                       <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
-                        <button onClick={() => handleEdit(u)} style={btnStyle('#3b82f6')}>Edit</button>
-                        <button onClick={() => setResetUserId(u._id)} style={btnStyle('#f59e0b')}>Reset PW</button>
-                        <button onClick={() => handleToggleStatus(u._id)} style={btnStyle(u.active === false ? '#22c55e' : '#94a3b8')}>
-                          {u.active === false ? 'Activate' : 'Suspend'}
-                        </button>
+                        {/* Superadmin only buttons */}
+                        {isSuperAdmin && (
+                          <>
+                            <button onClick={() => handleEdit(u)} style={btnStyle('#3b82f6')}>Edit</button>
+                            <button onClick={() => setResetUserId(u._id)} style={btnStyle('#f59e0b')}>Reset PW</button>
+                            <button onClick={() => handleToggleStatus(u._id)} style={btnStyle(u.active === false ? '#22c55e' : '#94a3b8')}>
+                              {u.active === false ? 'Activate' : 'Suspend'}
+                            </button>
+                          </>
+                        )}
+                        {/* Admin and superadmin button */}
                         <button onClick={() => handleDelete(u._id)} style={btnStyle('#ef4444')}>Delete</button>
                       </div>
                     )}

@@ -10,11 +10,32 @@ function DashboardPage() {
   const [announcements, setAnnouncements] = useState([]);
   const [newAnnouncement, setNewAnnouncement] = useState({ title: '', message: '', pinned: false });
   const [showForm, setShowForm] = useState(false);
+  const [stats, setStats] = useState({ materials: 0, locations: 0, categories: 0, users: 0 });
 
   useEffect(() => {
     fetchActivities();
     fetchAnnouncements();
+    fetchStats();
   }, []);
+
+  const fetchStats = async () => {
+    try {
+      const [materials, locations, categories, users] = await Promise.all([
+        axiosInstance.get('/materials'),
+        axiosInstance.get('/locations'),
+        axiosInstance.get('/categories'),
+        axiosInstance.get('/users'),
+      ]);
+      setStats({
+        materials: materials.data.length,
+        locations: locations.data.length,
+        categories: categories.data.length,
+        users: users.data.length,
+      });
+    } catch (err) {
+      console.error('Failed to fetch stats:', err);
+    }
+  };
 
   const fetchActivities = async () => {
     try {
@@ -75,10 +96,10 @@ function DashboardPage() {
   };
 
   const cards = [
-    { label: 'Materials', icon: '🧱', path: '/materials', color: '#3b82f6' },
-    { label: 'Locations', icon: '📍', path: '/locations', color: '#22c55e' },
-    { label: 'Categories', icon: '🗂️', path: '/categories', color: '#f59e0b' },
-    { label: 'Users', icon: '👥', path: '/users', color: '#8b5cf6' },
+    { label: 'Materials', icon: '🧱', path: '/materials', color: '#3b82f6', count: stats.materials },
+    { label: 'Locations', icon: '📍', path: '/locations', color: '#22c55e', count: stats.locations },
+    { label: 'Categories', icon: '🗂️', path: '/categories', color: '#f59e0b', count: stats.categories },
+    { label: 'Users', icon: '👥', path: '/users', color: '#8b5cf6', count: stats.users },
   ];
 
   const inputStyle = {
@@ -102,7 +123,7 @@ function DashboardPage() {
         <p style={{ color: '#64748b', marginTop: '4px' }}>Welcome back, {user?.email || 'Admin'}</p>
       </div>
 
-      {/* Nav Cards */}
+      {/* Stat Cards */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '16px', marginBottom: '32px' }}>
         {cards.map((card) => (
           <div
@@ -115,12 +136,16 @@ function DashboardPage() {
               cursor: 'pointer',
               boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
               borderLeft: `4px solid ${card.color}`,
+              transition: 'transform 0.2s',
             }}
             onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-2px)'}
             onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0)'}
           >
-            <div style={{ fontSize: '32px', marginBottom: '12px' }}>{card.icon}</div>
-            <div style={{ fontSize: '16px', fontWeight: '600', color: '#1e293b' }}>{card.label}</div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+              <div style={{ fontSize: '32px' }}>{card.icon}</div>
+              <div style={{ fontSize: '28px', fontWeight: '700', color: card.color }}>{card.count}</div>
+            </div>
+            <div style={{ fontSize: '16px', fontWeight: '600', color: '#1e293b', marginTop: '12px' }}>{card.label}</div>
             <div style={{ fontSize: '13px', color: '#64748b', marginTop: '4px' }}>View all →</div>
           </div>
         ))}

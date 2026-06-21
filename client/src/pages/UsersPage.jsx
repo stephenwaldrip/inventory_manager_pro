@@ -2,8 +2,10 @@ import React, { useEffect, useState, useContext } from 'react';
 import axiosInstance from '../utils/axiosInstance';
 import { AuthContext } from '../context/AuthContext';
 
+
 const UsersPage = () => {
   const { user } = useContext(AuthContext);
+  console.log('Current user:', user);
   const [users, setUsers] = useState([]);
   const [formData, setFormData] = useState({ name: '', email: '', password: '', role: 'user' });
 

@@ -19,6 +19,11 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+// Health check route — keeps Render free tier awake via cron ping
+app.get('/api/health', (req, res) => {
+  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
 app.use('/api/materials', materialsRoutes);
 app.use('/api/locations', locationsRoutes);
 app.use('/api/users', userRoutes);

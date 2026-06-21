@@ -1,8 +1,25 @@
+import { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 
 const Navbar = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const [isOpen, setIsOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+      if (window.innerWidth >= 768) setIsOpen(false);
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  // Close sidebar when navigating on mobile
+  useEffect(() => {
+    if (isMobile) setIsOpen(false);
+  }, [location.pathname]);
 
   const handleLogout = () => {
     localStorage.removeItem('token');
@@ -31,20 +48,15 @@ const Navbar = () => {
     fontWeight: location.pathname === path ? '600' : '400',
   });
 
-  return (
-    <div style={{
-      width: '240px',
-      backgroundColor: '#1e293b',
-      display: 'flex',
-      flexDirection: 'column',
-      padding: '24px 16px',
-      flexShrink: 0,
-      height: '100vh',
-    }}>
-      <div style={{ marginBottom: '32px' }}>
+  const sidebarContent = (
+    <>
+      <div style={{ marginBottom: '32px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <h1 style={{ color: '#ffffff', fontSize: '16px', fontWeight: '700', lineHeight: '1.3' }}>
           📦 Inventory Manager Pro
         </h1>
+        {isMobile && (
+          <button onClick={() => setIsOpen(false)} style={{ background: 'none', border: 'none', color: '#94a3b8', fontSize: '20px', cursor: 'pointer' }}>✕</button>
+        )}
       </div>
 
       <nav style={{ flex: 1 }}>
@@ -73,7 +85,64 @@ const Navbar = () => {
           Logout
         </button>
       </div>
-    </div>
+    </>
+  );
+
+  return (
+    <>
+      {/* Hamburger button - mobile only */}
+      {isMobile && (
+        <button
+          onClick={() => setIsOpen(true)}
+          style={{
+            position: 'fixed',
+            top: '16px',
+            left: '16px',
+            zIndex: 1000,
+            backgroundColor: '#1e293b',
+            color: 'white',
+            border: 'none',
+            borderRadius: '8px',
+            padding: '8px 12px',
+            fontSize: '20px',
+            cursor: 'pointer',
+          }}
+        >
+          ☰
+        </button>
+      )}
+
+      {/* Overlay - mobile only */}
+      {isMobile && isOpen && (
+        <div
+          onClick={() => setIsOpen(false)}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            backgroundColor: 'rgba(0,0,0,0.5)',
+            zIndex: 998,
+          }}
+        />
+      )}
+
+      {/* Sidebar */}
+      <div style={{
+        width: '240px',
+        backgroundColor: '#1e293b',
+        display: 'flex',
+        flexDirection: 'column',
+        padding: '24px 16px',
+        flexShrink: 0,
+        height: '100vh',
+        position: isMobile ? 'fixed' : 'relative',
+        left: isMobile ? (isOpen ? '0' : '-240px') : '0',
+        top: 0,
+        zIndex: 999,
+        transition: 'left 0.3s ease',
+      }}>
+        {sidebarContent}
+      </div>
+    </>
   );
 };
 

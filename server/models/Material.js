@@ -1,4 +1,3 @@
-// server/models/Material.js
 import mongoose from 'mongoose';
 
 const materialSchema = new mongoose.Schema(
@@ -19,7 +18,7 @@ const materialSchema = new mongoose.Schema(
     location: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Location',
-      required: true,
+      required: false,
     },
     notes: {
       type: String,

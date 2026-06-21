@@ -1,8 +1,6 @@
-// server/server.js
 import express from 'express';
 import dotenv from 'dotenv';
 import cors from 'cors';
-import mongoose from 'mongoose';
 
 import connectDB from './config/db.js';
 import materialsRoutes from './routes/materialsRoutes.js';
@@ -10,6 +8,8 @@ import locationsRoutes from './routes/locationsRoutes.js';
 import userRoutes from './routes/userRoutes.js';
 import categoriesRoutes from './routes/categoriesRoutes.js';
 import authRoutes from './routes/authRoutes.js';
+import activityRoutes from './routes/activityRoutes.js';
+import announcementRoutes from './routes/announcementRoutes.js';
 
 dotenv.config();
 connectDB();
@@ -24,6 +24,8 @@ app.use('/api/locations', locationsRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/categories', categoriesRoutes);
 app.use('/api/auth', authRoutes);
+app.use('/api/activity', activityRoutes);
+app.use('/api/announcements', announcementRoutes);
 
 const PORT = process.env.PORT || 5000;
 

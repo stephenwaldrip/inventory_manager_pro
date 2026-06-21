@@ -2,6 +2,7 @@ import express from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
+import Activity from '../models/Activity.js';
 
 const router = express.Router();
 
@@ -12,8 +13,17 @@ router.post('/register', async (req, res) => {
     const existingUser = await User.findOne({ email });
     if (existingUser) return res.status(400).json({ message: 'User already exists' });
 
-    // Role always defaults to 'user' — never trust client for role
     const user = await User.create({ name, email, password, role: 'user' });
+
+    try {
+      await Activity.create({
+        type: 'user_added',
+        message: `New user "${email}" registered`,
+        user: email,
+      });
+    } catch (actErr) {
+      console.warn('Activity log failed:', actErr.message);
+    }
 
     const token = jwt.sign(
       { userId: user._id, role: user.role, email: user.email },
@@ -37,6 +47,16 @@ router.post('/login', async (req, res) => {
 
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) return res.status(401).json({ message: 'Invalid email or password' });
+
+    try {
+      await Activity.create({
+        type: 'user_login',
+        message: `"${email}" logged in`,
+        user: email,
+      });
+    } catch (actErr) {
+      console.warn('Activity log failed:', actErr.message);
+    }
 
     const token = jwt.sign(
       { userId: user._id, role: user.role, email: user.email },

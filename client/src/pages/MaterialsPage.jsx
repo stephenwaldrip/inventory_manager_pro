@@ -3,21 +3,33 @@ import axiosInstance from '../utils/axiosInstance';
 
 const MaterialsPage = () => {
   const [materials, setMaterials] = useState([]);
+  const [locations, setLocations] = useState([]);
   const [newMaterial, setNewMaterial] = useState({
     name: '', type: '', quantity: 0, location: '', notes: ''
   });
 
   useEffect(() => {
-    const fetchMaterials = async () => {
-      try {
-        const res = await axiosInstance.get('/materials');
-        setMaterials(res.data);
-      } catch (err) {
-        console.error('Failed to fetch materials:', err);
-      }
-    };
     fetchMaterials();
+    fetchLocations();
   }, []);
+
+  const fetchMaterials = async () => {
+    try {
+      const res = await axiosInstance.get('/materials');
+      setMaterials(res.data);
+    } catch (err) {
+      console.error('Failed to fetch materials:', err);
+    }
+  };
+
+  const fetchLocations = async () => {
+    try {
+      const res = await axiosInstance.get('/locations');
+      setLocations(res.data);
+    } catch (err) {
+      console.error('Failed to fetch locations:', err);
+    }
+  };
 
   const handleInputChange = (e) => {
     setNewMaterial({ ...newMaterial, [e.target.name]: e.target.value });
@@ -29,7 +41,7 @@ const MaterialsPage = () => {
         name: newMaterial.name,
         type: newMaterial.type,
         quantity: Number(newMaterial.quantity),
-        location: newMaterial.location,
+        location: newMaterial.location || undefined,
         notes: newMaterial.notes || ''
       });
       setMaterials((prev) => [...prev, res.data]);
@@ -74,7 +86,17 @@ const MaterialsPage = () => {
           <input style={inputStyle} name="name" value={newMaterial.name} onChange={handleInputChange} placeholder="Material Name" />
           <input style={inputStyle} name="type" value={newMaterial.type} onChange={handleInputChange} placeholder="Material Type" />
           <input style={{ ...inputStyle, flex: 'none', width: '100px' }} name="quantity" type="number" value={newMaterial.quantity} onChange={handleInputChange} placeholder="Qty" />
-          <input style={inputStyle} name="location" value={newMaterial.location} onChange={handleInputChange} placeholder="Location ID" />
+          <select
+            style={{ ...inputStyle }}
+            name="location"
+            value={newMaterial.location}
+            onChange={handleInputChange}
+          >
+            <option value="">Select Location</option>
+            {locations.map((loc) => (
+              <option key={loc._id} value={loc._id}>{loc.name}</option>
+            ))}
+          </select>
           <input style={inputStyle} name="notes" value={newMaterial.notes} onChange={handleInputChange} placeholder="Notes" />
           <button
             onClick={handleAddMaterial}
@@ -131,7 +153,7 @@ const MaterialsPage = () => {
                   <td style={{ padding: '12px 16px', fontSize: '14px', color: '#1e293b', borderBottom: '1px solid #e2e8f0' }}>{mat.name}</td>
                   <td style={{ padding: '12px 16px', fontSize: '14px', color: '#64748b', borderBottom: '1px solid #e2e8f0' }}>{mat.type}</td>
                   <td style={{ padding: '12px 16px', fontSize: '14px', color: '#64748b', borderBottom: '1px solid #e2e8f0' }}>{mat.quantity}</td>
-                  <td style={{ padding: '12px 16px', fontSize: '14px', color: '#64748b', borderBottom: '1px solid #e2e8f0' }}>{mat.location?.name || mat.location || 'N/A'}</td>
+                  <td style={{ padding: '12px 16px', fontSize: '14px', color: '#64748b', borderBottom: '1px solid #e2e8f0' }}>{mat.location?.name || 'N/A'}</td>
                   <td style={{ padding: '12px 16px', fontSize: '14px', color: '#64748b', borderBottom: '1px solid #e2e8f0' }}>{mat.notes || '—'}</td>
                 </tr>
               ))

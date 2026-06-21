@@ -4,13 +4,15 @@ import axiosInstance from '../utils/axiosInstance';
 const MaterialsPage = () => {
   const [materials, setMaterials] = useState([]);
   const [locations, setLocations] = useState([]);
+  const [categories, setCategories] = useState([]);
   const [newMaterial, setNewMaterial] = useState({
-    name: '', type: '', quantity: 0, location: '', notes: ''
+    name: '', type: '', quantity: 0, location: '', category: '', notes: ''
   });
 
   useEffect(() => {
     fetchMaterials();
     fetchLocations();
+    fetchCategories();
   }, []);
 
   const fetchMaterials = async () => {
@@ -31,6 +33,15 @@ const MaterialsPage = () => {
     }
   };
 
+  const fetchCategories = async () => {
+    try {
+      const res = await axiosInstance.get('/categories');
+      setCategories(res.data);
+    } catch (err) {
+      console.error('Failed to fetch categories:', err);
+    }
+  };
+
   const handleInputChange = (e) => {
     setNewMaterial({ ...newMaterial, [e.target.name]: e.target.value });
   };
@@ -42,10 +53,11 @@ const MaterialsPage = () => {
         type: newMaterial.type,
         quantity: Number(newMaterial.quantity),
         location: newMaterial.location || undefined,
+        category: newMaterial.category || undefined,
         notes: newMaterial.notes || ''
       });
       setMaterials((prev) => [...prev, res.data]);
-      setNewMaterial({ name: '', type: '', quantity: 0, location: '', notes: '' });
+      setNewMaterial({ name: '', type: '', quantity: 0, location: '', category: '', notes: '' });
     } catch (err) {
       if (err.response) {
         alert(`Failed: ${err.response.data.message}`);
@@ -86,15 +98,16 @@ const MaterialsPage = () => {
           <input style={inputStyle} name="name" value={newMaterial.name} onChange={handleInputChange} placeholder="Material Name" />
           <input style={inputStyle} name="type" value={newMaterial.type} onChange={handleInputChange} placeholder="Material Type" />
           <input style={{ ...inputStyle, flex: 'none', width: '100px' }} name="quantity" type="number" value={newMaterial.quantity} onChange={handleInputChange} placeholder="Qty" />
-          <select
-            style={{ ...inputStyle }}
-            name="location"
-            value={newMaterial.location}
-            onChange={handleInputChange}
-          >
+          <select style={inputStyle} name="location" value={newMaterial.location} onChange={handleInputChange}>
             <option value="">Select Location</option>
             {locations.map((loc) => (
               <option key={loc._id} value={loc._id}>{loc.name}</option>
+            ))}
+          </select>
+          <select style={inputStyle} name="category" value={newMaterial.category} onChange={handleInputChange}>
+            <option value="">Select Category</option>
+            {categories.map((cat) => (
+              <option key={cat._id} value={cat._id}>{cat.name}</option>
             ))}
           </select>
           <input style={inputStyle} name="notes" value={newMaterial.notes} onChange={handleInputChange} placeholder="Notes" />
@@ -126,7 +139,7 @@ const MaterialsPage = () => {
         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
           <thead>
             <tr style={{ backgroundColor: '#f8fafc' }}>
-              {['Name', 'Type', 'Quantity', 'Location', 'Notes'].map((h) => (
+              {['Name', 'Type', 'Quantity', 'Location', 'Category', 'Notes'].map((h) => (
                 <th key={h} style={{
                   padding: '12px 16px',
                   textAlign: 'left',
@@ -143,7 +156,7 @@ const MaterialsPage = () => {
           <tbody>
             {materials.length === 0 ? (
               <tr>
-                <td colSpan="5" style={{ padding: '24px', textAlign: 'center', color: '#94a3b8' }}>
+                <td colSpan="6" style={{ padding: '24px', textAlign: 'center', color: '#94a3b8' }}>
                   No materials yet. Add one above!
                 </td>
               </tr>
@@ -154,6 +167,7 @@ const MaterialsPage = () => {
                   <td style={{ padding: '12px 16px', fontSize: '14px', color: '#64748b', borderBottom: '1px solid #e2e8f0' }}>{mat.type}</td>
                   <td style={{ padding: '12px 16px', fontSize: '14px', color: '#64748b', borderBottom: '1px solid #e2e8f0' }}>{mat.quantity}</td>
                   <td style={{ padding: '12px 16px', fontSize: '14px', color: '#64748b', borderBottom: '1px solid #e2e8f0' }}>{mat.location?.name || 'N/A'}</td>
+                  <td style={{ padding: '12px 16px', fontSize: '14px', color: '#64748b', borderBottom: '1px solid #e2e8f0' }}>{mat.category?.name || 'N/A'}</td>
                   <td style={{ padding: '12px 16px', fontSize: '14px', color: '#64748b', borderBottom: '1px solid #e2e8f0' }}>{mat.notes || '—'}</td>
                 </tr>
               ))

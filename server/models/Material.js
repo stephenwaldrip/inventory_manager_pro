@@ -20,6 +20,11 @@ const materialSchema = new mongoose.Schema(
       ref: 'Location',
       required: false,
     },
+    category: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Category',
+      required: false,
+    },
     notes: {
       type: String,
     },

@@ -17,7 +17,7 @@ const UsersPage = () => {
       }
     };
 
-    if (user?.role === 'admin') {
+    if (['admin', 'superadmin'].includes(user?.role)) {
       fetchUsers();
     }
   }, [user]);
@@ -38,7 +38,17 @@ const UsersPage = () => {
     }
   };
 
-  if (user?.role !== 'admin') {
+  const handleRoleChange = async (userId, newRole) => {
+    try {
+      await axiosInstance.put(`/users/${userId}/role`, { role: newRole });
+      setUsers(prev => prev.map(u => u._id === userId ? { ...u, role: newRole } : u));
+    } catch (err) {
+      console.error(err);
+      alert('Failed to update role.');
+    }
+  };
+
+  if (!['admin', 'superadmin'].includes(user?.role)) {
     return (
       <div style={{ padding: '40px', textAlign: 'center', color: '#ef4444', fontSize: '18px' }}>
         Access Denied. Admins only.
@@ -66,6 +76,21 @@ const UsersPage = () => {
     fontSize: '13px',
     fontWeight: '600',
   });
+
+  const roleBadge = (role) => {
+    const styles = {
+      superadmin: { backgroundColor: '#fef3c7', color: '#92400e' },
+      admin: { backgroundColor: '#dbeafe', color: '#1d4ed8' },
+      user: { backgroundColor: '#f0fdf4', color: '#15803d' },
+    };
+    return {
+      padding: '2px 10px',
+      borderRadius: '999px',
+      fontSize: '12px',
+      fontWeight: '600',
+      ...styles[role] || styles.user,
+    };
+  };
 
   return (
     <div>
@@ -109,7 +134,7 @@ const UsersPage = () => {
         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
           <thead>
             <tr style={{ backgroundColor: '#f8fafc' }}>
-              {['Name', 'Email', 'Role'].map((h) => (
+              {['Name', 'Email', 'Role', user?.role === 'superadmin' ? 'Change Role' : ''].filter(Boolean).map((h) => (
                 <th key={h} style={{ padding: '12px 16px', textAlign: 'left', fontSize: '12px', fontWeight: '600', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid #e2e8f0' }}>{h}</th>
               ))}
             </tr>
@@ -117,27 +142,32 @@ const UsersPage = () => {
           <tbody>
             {users.length === 0 ? (
               <tr>
-                <td colSpan="3" style={{ padding: '24px', textAlign: 'center', color: '#94a3b8' }}>
+                <td colSpan="4" style={{ padding: '24px', textAlign: 'center', color: '#94a3b8' }}>
                   No users found.
                 </td>
               </tr>
             ) : (
               users.map((u, i) => (
                 <tr key={u._id} style={{ backgroundColor: i % 2 === 0 ? 'white' : '#f8fafc' }}>
-                  <td style={{ padding: '12px 16px', fontSize: '14px', color: '#1e293b', borderBottom: '1px solid #e2e8f0' }}>👤 {u.name || u.username || '—'}</td>
+                  <td style={{ padding: '12px 16px', fontSize: '14px', color: '#1e293b', borderBottom: '1px solid #e2e8f0' }}>👤 {u.name || '—'}</td>
                   <td style={{ padding: '12px 16px', fontSize: '14px', color: '#64748b', borderBottom: '1px solid #e2e8f0' }}>{u.email}</td>
                   <td style={{ padding: '12px 16px', borderBottom: '1px solid #e2e8f0' }}>
-                    <span style={{
-                      padding: '2px 10px',
-                      borderRadius: '999px',
-                      fontSize: '12px',
-                      fontWeight: '600',
-                      backgroundColor: u.role === 'admin' ? '#dbeafe' : '#f0fdf4',
-                      color: u.role === 'admin' ? '#1d4ed8' : '#15803d',
-                    }}>
-                      {u.role}
-                    </span>
+                    <span style={roleBadge(u.role)}>{u.role}</span>
                   </td>
+                  {user?.role === 'superadmin' && (
+                    <td style={{ padding: '12px 16px', borderBottom: '1px solid #e2e8f0' }}>
+                      {u.role !== 'superadmin' && (
+                        <select
+                          value={u.role}
+                          onChange={(e) => handleRoleChange(u._id, e.target.value)}
+                          style={{ ...inputStyle, width: 'auto' }}
+                        >
+                          <option value="user">User</option>
+                          <option value="admin">Admin</option>
+                        </select>
+                      )}
+                    </td>
+                  )}
                 </tr>
               ))
             )}

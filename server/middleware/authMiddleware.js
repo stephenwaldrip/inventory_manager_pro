@@ -1,20 +1,15 @@
-// middleware/authMiddleware.js
 import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
 
-// 🔐 Middleware to verify JWT and attach user to request
 export const protect = async (req, res, next) => {
   let token;
 
-  if (
-    req.headers.authorization &&
-    req.headers.authorization.startsWith('Bearer')
-  ) {
+  if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
     try {
       token = req.headers.authorization.split(' ')[1];
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-      req.user = await User.findById(decoded.id).select('-password');
+      req.user = await User.findById(decoded.userId).select('-password');
 
       next();
     } catch (err) {
@@ -26,11 +21,18 @@ export const protect = async (req, res, next) => {
   }
 };
 
-// 🛡️ Middleware to restrict access to admins only
 export const adminOnly = (req, res, next) => {
-  if (req.user && req.user.role === 'admin') {
+  if (req.user && ['admin', 'superadmin'].includes(req.user.role)) {
     next();
   } else {
     res.status(403).json({ message: 'Admin access only' });
+  }
+};
+
+export const superAdminOnly = (req, res, next) => {
+  if (req.user && req.user.role === 'superadmin') {
+    next();
+  } else {
+    res.status(403).json({ message: 'Super Admin access only' });
   }
 };

@@ -1,11 +1,14 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
-import './index.css'; // Optional: only include if you have global styles
+import './index.css';
+import ServerWakeUp from './components/ServerWakeUp';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <React.StrictMode>
-    <App />
+    <ServerWakeUp>
+      <App />
+    </ServerWakeUp>
   </React.StrictMode>
 );

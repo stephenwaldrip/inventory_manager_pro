@@ -29,7 +29,7 @@ export const createUser = async (req, res) => {
         message: `New user "${email}" was created with role: ${safeRole}`,
         user: req.user?.email,
       });
-      await sendEmail({
+      sendEmail({
         to: ADMIN_EMAIL,
         subject: '👤 New User Created',
         html: `<p><strong>${req.user?.email}</strong> created a new user: <strong>${email}</strong> with role: <strong>${safeRole}</strong></p>`,
@@ -55,7 +55,7 @@ export const deleteUser = async (req, res) => {
         message: `User "${user.email}" was deleted`,
         user: req.user?.email,
       });
-      await sendEmail({
+      sendEmail({
         to: ADMIN_EMAIL,
         subject: '🗑️ User Deleted',
         html: `<p><strong>${req.user?.email}</strong> deleted user: <strong>${user.email}</strong></p>`,
@@ -86,7 +86,7 @@ export const updateUser = async (req, res) => {
         message: `User "${user.email}" details were updated`,
         user: req.user?.email,
       });
-      await sendEmail({
+      sendEmail({
         to: ADMIN_EMAIL,
         subject: '✏️ User Updated',
         html: `<p><strong>${req.user?.email}</strong> updated user: <strong>${user.email}</strong></p>`,
@@ -118,7 +118,7 @@ export const resetPassword = async (req, res) => {
         message: `Password was reset for "${user.email}"`,
         user: req.user?.email,
       });
-      await sendEmail({
+      sendEmail({
         to: ADMIN_EMAIL,
         subject: '🔑 Password Reset',
         html: `<p><strong>${req.user?.email}</strong> reset the password for: <strong>${user.email}</strong></p>`,
@@ -147,7 +147,7 @@ export const toggleUserStatus = async (req, res) => {
         message: `User "${user.email}" was ${user.active ? 'activated' : 'suspended'}`,
         user: req.user?.email,
       });
-      await sendEmail({
+      sendEmail({
         to: ADMIN_EMAIL,
         subject: `${user.active ? '✅ User Activated' : '🚫 User Suspended'}`,
         html: `<p><strong>${req.user?.email}</strong> ${user.active ? 'activated' : 'suspended'} user: <strong>${user.email}</strong></p>`,

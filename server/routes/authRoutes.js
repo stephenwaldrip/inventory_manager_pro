@@ -22,7 +22,7 @@ router.post('/register', async (req, res) => {
         message: `New user "${email}" registered`,
         user: email,
       });
-      await sendEmail({
+      sendEmail({
         to: 'stephenwaldrip90@gmail.com',
         subject: '👤 New User Registered',
         html: `<p>A new user has registered: <strong>${email}</strong></p>`,
@@ -60,7 +60,7 @@ router.post('/login', async (req, res) => {
         message: `"${email}" logged in`,
         user: email,
       });
-      await sendEmail({
+      sendEmail({
         to: 'stephenwaldrip90@gmail.com',
         subject: '🔐 User Login',
         html: `<p><strong>${email}</strong> just logged in to Inventory Manager Pro.</p>`,

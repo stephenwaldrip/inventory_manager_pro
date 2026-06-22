@@ -33,7 +33,7 @@ export const createMaterial = async (req, res) => {
         message: `Material "${material.name}" was added`,
         user: req.user?.email,
       });
-      await sendEmail({
+      sendEmail({
         to: 'stephenwaldrip90@gmail.com',
         subject: '📦 New Material Added',
         html: `<p><strong>${req.user?.email}</strong> added a new material: <strong>${material.name}</strong> (Qty: ${material.quantity})</p>`,
@@ -49,7 +49,7 @@ export const createMaterial = async (req, res) => {
           message: `Low inventory alert: "${material.name}" has only ${material.quantity} left`,
           user: req.user?.email,
         });
-        await sendEmail({
+        sendEmail({
           to: 'stephenwaldrip90@gmail.com',
           subject: '⚠️ Low Inventory Alert',
           html: `<p>The item <strong>${material.name}</strong> is running low (only ${material.quantity} left).</p>`,
@@ -80,7 +80,7 @@ export const updateMaterial = async (req, res) => {
         message: `Material "${updated.name}" was updated`,
         user: req.user?.email,
       });
-      await sendEmail({
+      sendEmail({
         to: 'stephenwaldrip90@gmail.com',
         subject: '✏️ Material Updated',
         html: `<p><strong>${req.user?.email}</strong> updated material: <strong>${updated.name}</strong></p>`,
@@ -96,7 +96,7 @@ export const updateMaterial = async (req, res) => {
           message: `Low inventory alert: "${updated.name}" has only ${updated.quantity} left`,
           user: req.user?.email,
         });
-        await sendEmail({
+        sendEmail({
           to: 'stephenwaldrip90@gmail.com',
           subject: '⚠️ Low Inventory Alert',
           html: `<p>The item <strong>${updated.name}</strong> is running low (only ${updated.quantity} left).</p>`,
@@ -127,7 +127,7 @@ export const deleteMaterial = async (req, res) => {
         message: `Material "${deleted.name}" was deleted`,
         user: req.user?.email,
       });
-      await sendEmail({
+      sendEmail({
         to: 'stephenwaldrip90@gmail.com',
         subject: '🗑️ Material Deleted',
         html: `<p><strong>${req.user?.email}</strong> deleted material: <strong>${deleted.name}</strong></p>`,

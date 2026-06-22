@@ -21,7 +21,7 @@ const createLocation = async (req, res) => {
         message: `Location "${name}" was created`,
         user: req.user?.email,
       });
-      await sendEmail({
+      sendEmail({
         to: ADMIN_EMAIL,
         subject: '📍 New Location Created',
         html: `<p><strong>${req.user?.email}</strong> created a new location: <strong>${name}</strong></p>`,
@@ -66,7 +66,7 @@ const updateLocation = async (req, res) => {
         message: `Location "${location.name}" was updated`,
         user: req.user?.email,
       });
-      await sendEmail({
+      sendEmail({
         to: ADMIN_EMAIL,
         subject: '✏️ Location Updated',
         html: `<p><strong>${req.user?.email}</strong> updated location: <strong>${location.name}</strong></p>`,
@@ -92,7 +92,7 @@ const deleteLocation = async (req, res) => {
         message: `Location "${location.name}" was deleted`,
         user: req.user?.email,
       });
-      await sendEmail({
+      sendEmail({
         to: ADMIN_EMAIL,
         subject: '🗑️ Location Deleted',
         html: `<p><strong>${req.user?.email}</strong> deleted location: <strong>${location.name}</strong></p>`,

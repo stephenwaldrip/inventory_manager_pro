@@ -92,6 +92,12 @@ function LoginPage() {
         />
         <button style={buttonStyle} onClick={handleLogin}>Login</button>
 
+        <p style={{ textAlign: 'right', marginTop: '-6px', marginBottom: '12px', fontSize: '13px' }}>
+          <Link to="/forgot-password" style={{ color: '#4f46e5', textDecoration: 'none' }}>
+            Forgot password?
+          </Link>
+        </p>
+
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
           <div style={{ flex: 1, height: '1px', backgroundColor: '#e2e8f0' }} />
           <span style={{ color: '#94a3b8', fontSize: '12px' }}>or</span>

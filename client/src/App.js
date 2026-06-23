@@ -9,6 +9,8 @@ import LocationsPage from './pages/LocationsPage';
 import CategoriesPage from './pages/CategoriesPage';
 import DashboardPage from './pages/DashboardPage';
 import Layout from './components/Layout.js';
+import ForgotPasswordPage from './pages/ForgotPasswordPage';
+import ResetPasswordPage from './pages/ResetPasswordPage';
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -28,7 +30,9 @@ function App() {
         <Routes>
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
-          
+          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+          <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
+
           <Route element={<Layout />}>
             <Route path="/" element={<PrivateRoute element={<DashboardPage />} />} />
             <Route path="/materials" element={<PrivateRoute element={<MaterialsPage />} />} />

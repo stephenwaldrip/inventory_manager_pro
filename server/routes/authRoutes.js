@@ -1,6 +1,7 @@
 import express from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import crypto from 'crypto';
 import User from '../models/User.js';
 import Activity from '../models/Activity.js';
 import sendEmail from '../utils/sendEmail.js';
@@ -76,6 +77,70 @@ router.post('/login', async (req, res) => {
     );
 
     res.json({ token, user: { email: user.email, role: user.role } });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Forgot password - sends reset email
+router.post('/forgot-password', async (req, res) => {
+  const { email } = req.body;
+
+  try {
+    const user = await User.findOne({ email });
+    if (!user) return res.status(404).json({ message: 'No account found with that email' });
+
+    const token = crypto.randomBytes(32).toString('hex');
+    user.resetPasswordToken = token;
+    user.resetPasswordExpires = Date.now() + 60 * 60 * 1000; // 1 hour
+    await user.save();
+
+    const resetUrl = `${process.env.CLIENT_URL}/reset-password/${token}`;
+
+    sendEmail({
+      to: user.email,
+      subject: '🔑 Password Reset Request',
+      html: `
+        <p>You requested a password reset for your Inventory Manager Pro account.</p>
+        <p>Click the link below to reset your password. This link expires in 1 hour.</p>
+        <a href="${resetUrl}" style="background:#3b82f6;color:white;padding:10px 20px;border-radius:5px;text-decoration:none;">Reset Password</a>
+        <p>If you didn't request this, ignore this email.</p>
+      `,
+    });
+
+    res.json({ message: 'Password reset email sent' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Reset password - validates token and updates password
+router.post('/reset-password/:token', async (req, res) => {
+  const { token } = req.params;
+  const { password } = req.body;
+
+  try {
+    const user = await User.findOne({
+      resetPasswordToken: token,
+      resetPasswordExpires: { $gt: Date.now() },
+    });
+
+    if (!user) return res.status(400).json({ message: 'Reset link is invalid or has expired' });
+
+    user.password = password;
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpires = undefined;
+    await user.save();
+
+    sendEmail({
+      to: user.email,
+      subject: '✅ Password Reset Successful',
+      html: `<p>Your Inventory Manager Pro password has been successfully reset. If you didn't do this, contact your admin immediately.</p>`,
+    });
+
+    res.json({ message: 'Password reset successful' });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Server error' });

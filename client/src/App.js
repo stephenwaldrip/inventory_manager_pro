@@ -1,6 +1,6 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { useEffect, useState } from 'react';
-import { AuthProvider } from './context/AuthContext';
+import { useContext } from 'react';
+import { AuthProvider, AuthContext } from './context/AuthContext';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import MaterialsPage from './pages/MaterialsPage';
@@ -12,18 +12,12 @@ import Layout from './components/Layout.js';
 import ForgotPasswordPage from './pages/ForgotPasswordPage';
 import ResetPasswordPage from './pages/ResetPasswordPage';
 
+const PrivateRoute = ({ element }) => {
+  const { isAuthenticated } = useContext(AuthContext);
+  return isAuthenticated ? element : <Navigate to="/login" />;
+};
+
 function App() {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-
-  useEffect(() => {
-    const token = localStorage.getItem('token');
-    setIsAuthenticated(!!token);
-  }, []);
-
-  const PrivateRoute = ({ element }) => {
-    return isAuthenticated ? element : <Navigate to="/login" />;
-  };
-
   return (
     <AuthProvider>
       <Router>

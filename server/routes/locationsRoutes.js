@@ -7,16 +7,17 @@ import {
   updateLocation,
   deleteLocation,
 } from '../controllers/locationsController.js';
+import { protect } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
 
 router.route('/')
-  .get(getLocations)
-  .post(createLocation);
+  .get(protect, getLocations)
+  .post(protect, createLocation);
 
 router.route('/:id')
-  .get(getLocationById)
-  .put(updateLocation)
-  .delete(deleteLocation);
+  .get(protect, getLocationById)
+  .put(protect, updateLocation)
+  .delete(protect, deleteLocation);
 
 export default router;

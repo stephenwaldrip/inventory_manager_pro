@@ -1,27 +1,24 @@
-// server/routes/categoryRoutes.js
-const express = require('express');
-const router = express.Router();
-const {
+// server/routes/categoriesRoutes.js
+import express from 'express';
+import {
   getCategories,
   createCategory,
   getCategoryById,
   updateCategory,
   deleteCategory,
-} = require('../controllers/categoryController');
+} from '../controllers/categoryController.js';
+import { protect } from '../middleware/authMiddleware.js';
 
-// GET all categories
-router.get('/', getCategories);
+const router = express.Router();
 
-// POST create a new category
-router.post('/', createCategory);
+// All category routes require an authenticated user.
+router.route('/')
+  .get(protect, getCategories)
+  .post(protect, createCategory);
 
-// GET a single category by ID
-router.get('/:id', getCategoryById);
+router.route('/:id')
+  .get(protect, getCategoryById)
+  .put(protect, updateCategory)
+  .delete(protect, deleteCategory);
 
-// PUT update a category by ID
-router.put('/:id', updateCategory);
-
-// DELETE a category by ID
-router.delete('/:id', deleteCategory);
-
-module.exports = router;
+export default router;

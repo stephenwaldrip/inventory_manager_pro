@@ -8,8 +8,22 @@ import sendEmail from '../utils/sendEmail.js';
 
 const router = express.Router();
 
+// Reject anything that isn't a plain non-empty string. Prevents NoSQL
+// operator injection (e.g. { "$gt": "" }) reaching Mongoose queries.
+const isNonEmptyString = (v) => typeof v === 'string' && v.trim().length > 0;
+
+const hashToken = (token) =>
+  crypto.createHash('sha256').update(token).digest('hex');
+
 router.post('/register', async (req, res) => {
   const { name, email, password } = req.body;
+
+  if (!isNonEmptyString(email) || !isNonEmptyString(password)) {
+    return res.status(400).json({ message: 'Valid email and password are required' });
+  }
+  if (password.length < 8) {
+    return res.status(400).json({ message: 'Password must be at least 8 characters' });
+  }
 
   try {
     const existingUser = await User.findOne({ email });
@@ -48,12 +62,20 @@ router.post('/register', async (req, res) => {
 router.post('/login', async (req, res) => {
   const { email, password } = req.body;
 
+  if (!isNonEmptyString(email) || !isNonEmptyString(password)) {
+    return res.status(401).json({ message: 'Invalid email or password' });
+  }
+
   try {
     const user = await User.findOne({ email });
     if (!user) return res.status(401).json({ message: 'Invalid email or password' });
 
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) return res.status(401).json({ message: 'Invalid email or password' });
+
+    if (user.active === false) {
+      return res.status(403).json({ message: 'Account is suspended. Contact your administrator.' });
+    }
 
     try {
       await Activity.create({
@@ -87,12 +109,19 @@ router.post('/login', async (req, res) => {
 router.post('/forgot-password', async (req, res) => {
   const { email } = req.body;
 
+  // Always return the same generic response so the endpoint can't be used to
+  // enumerate which emails have accounts.
+  const genericResponse = { message: 'If an account exists for that email, a reset link has been sent.' };
+
   try {
+    if (!isNonEmptyString(email)) return res.json(genericResponse);
+
     const user = await User.findOne({ email });
-    if (!user) return res.status(404).json({ message: 'No account found with that email' });
+    if (!user) return res.json(genericResponse);
 
     const token = crypto.randomBytes(32).toString('hex');
-    user.resetPasswordToken = token;
+    // Store only a hash of the token; the raw token goes out by email.
+    user.resetPasswordToken = hashToken(token);
     user.resetPasswordExpires = Date.now() + 60 * 60 * 1000; // 1 hour
     await user.save();
 
@@ -109,7 +138,7 @@ router.post('/forgot-password', async (req, res) => {
       `,
     });
 
-    res.json({ message: 'Password reset email sent' });
+    res.json(genericResponse);
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Server error' });
@@ -121,9 +150,13 @@ router.post('/reset-password/:token', async (req, res) => {
   const { token } = req.params;
   const { password } = req.body;
 
+  if (!isNonEmptyString(password) || password.length < 8) {
+    return res.status(400).json({ message: 'Password must be at least 8 characters' });
+  }
+
   try {
     const user = await User.findOne({
-      resetPasswordToken: token,
+      resetPasswordToken: hashToken(token),
       resetPasswordExpires: { $gt: Date.now() },
     });
 

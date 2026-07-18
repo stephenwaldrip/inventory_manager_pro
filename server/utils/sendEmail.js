@@ -1,8 +1,14 @@
 import { Resend } from 'resend';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+const resend = process.env.RESEND_API_KEY
+  ? new Resend(process.env.RESEND_API_KEY)
+  : null;
 
 const sendEmail = async ({ to, subject, html }) => {
+  if (!resend) {
+    console.warn('RESEND_API_KEY not set — skipping email:', subject);
+    return;
+  }
   try {
     const data = await resend.emails.send({
       from: 'Inventory Manager Pro <onboarding@resend.dev>',

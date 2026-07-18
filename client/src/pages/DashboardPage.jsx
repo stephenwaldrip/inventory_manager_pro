@@ -2,9 +2,11 @@ import { useNavigate } from 'react-router-dom';
 import { useContext, useEffect, useState } from 'react';
 import { AuthContext } from '../context/AuthContext';
 import axiosInstance from '../utils/axiosInstance';
+import { useToast } from '../context/ToastContext';
 
 function DashboardPage() {
   const navigate = useNavigate();
+  const { toast } = useToast();
   const { user } = useContext(AuthContext);
   const [activities, setActivities] = useState([]);
   const [announcements, setAnnouncements] = useState([]);
@@ -61,8 +63,9 @@ function DashboardPage() {
       setNewAnnouncement({ title: '', message: '', pinned: false });
       setShowForm(false);
       fetchAnnouncements();
+      toast.success('Announcement posted.');
     } catch (err) {
-      alert('Failed to post announcement.');
+      toast.error('Failed to post announcement.');
     }
   };
 
@@ -70,8 +73,9 @@ function DashboardPage() {
     try {
       await axiosInstance.delete(`/announcements/${id}`);
       fetchAnnouncements();
+      toast.success('Announcement deleted.');
     } catch (err) {
-      alert('Failed to delete announcement.');
+      toast.error('Failed to delete announcement.');
     }
   };
 

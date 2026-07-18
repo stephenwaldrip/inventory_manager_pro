@@ -1,10 +1,12 @@
 import { useState, useContext } from 'react';
 import axios from '../utils/axiosInstance';
 import { AuthContext } from '../context/AuthContext';
+import { useToast } from '../context/ToastContext';
 import { useNavigate, Link } from 'react-router-dom';
 
 function LoginPage() {
   const { login } = useContext(AuthContext);
+  const { toast } = useToast();
   const navigate = useNavigate();
 
   const [email, setEmail] = useState('');
@@ -16,7 +18,7 @@ function LoginPage() {
       login(res.data.token);
       navigate('/');
     } catch (err) {
-      alert('Login failed: ' + err.message);
+      toast.error(err.response?.data?.message || 'Invalid email or password.');
     }
   };
 
@@ -29,7 +31,7 @@ function LoginPage() {
       login(res.data.token);
       navigate('/');
     } catch (err) {
-      alert('Demo login failed. Please try again.');
+      toast.error('Demo login failed. Please try again.');
     }
   };
 

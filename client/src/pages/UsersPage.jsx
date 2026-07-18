@@ -1,9 +1,11 @@
 import React, { useEffect, useState, useContext } from 'react';
 import axiosInstance from '../utils/axiosInstance';
 import { AuthContext } from '../context/AuthContext';
+import { useToast } from '../context/ToastContext';
 
 const UsersPage = () => {
   const { user } = useContext(AuthContext);
+  const { toast } = useToast();
   const [users, setUsers] = useState([]);
   const [formData, setFormData] = useState({ name: '', email: '', password: '', role: 'user' });
   const [editingUser, setEditingUser] = useState(null);
@@ -15,7 +17,7 @@ const UsersPage = () => {
 
   useEffect(() => {
     if (isAdmin) fetchUsers();
-  }, [user]);
+  }, [user, isAdmin]);
 
   const fetchUsers = async () => {
     try {
@@ -36,9 +38,10 @@ const UsersPage = () => {
       await axiosInstance.post('/users', formData);
       setFormData({ name: '', email: '', password: '', role: 'user' });
       fetchUsers();
+      toast.success('User added.');
     } catch (err) {
       console.error(err);
-      alert('Failed to add user.');
+      toast.error(err.response?.data?.message || 'Failed to add user.');
     }
   };
 
@@ -46,8 +49,9 @@ const UsersPage = () => {
     try {
       await axiosInstance.put(`/users/${userId}/role`, { role: newRole });
       fetchUsers();
+      toast.success('Role updated.');
     } catch (err) {
-      alert('Failed to update role.');
+      toast.error('Failed to update role.');
     }
   };
 
@@ -56,8 +60,9 @@ const UsersPage = () => {
     try {
       await axiosInstance.delete(`/users/${userId}`);
       fetchUsers();
+      toast.success('User deleted.');
     } catch (err) {
-      alert('Failed to delete user.');
+      toast.error('Failed to delete user.');
     }
   };
 
@@ -71,20 +76,21 @@ const UsersPage = () => {
       });
       setEditingUser(null);
       fetchUsers();
+      toast.success('User updated.');
     } catch (err) {
-      alert('Failed to update user.');
+      toast.error('Failed to update user.');
     }
   };
 
   const handleResetPassword = async (userId) => {
-    if (!newPassword) return alert('Enter a new password.');
+    if (!newPassword) return toast.error('Enter a new password.');
     try {
       await axiosInstance.put(`/users/${userId}/password`, { password: newPassword });
       setResetUserId(null);
       setNewPassword('');
-      alert('Password reset successfully!');
+      toast.success('Password reset successfully!');
     } catch (err) {
-      alert('Failed to reset password.');
+      toast.error('Failed to reset password.');
     }
   };
 
@@ -92,8 +98,9 @@ const UsersPage = () => {
     try {
       await axiosInstance.put(`/users/${userId}/status`);
       fetchUsers();
+      toast.success('Status updated.');
     } catch (err) {
-      alert('Failed to update status.');
+      toast.error('Failed to update status.');
     }
   };
 

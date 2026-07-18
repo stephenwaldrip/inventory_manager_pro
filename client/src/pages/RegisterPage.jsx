@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useToast } from '../context/ToastContext';
 
 const RegisterPage = () => {
+  const { toast } = useToast();
   const [formData, setFormData] = useState({
     name: '',
     username: '',
@@ -31,13 +33,14 @@ const RegisterPage = () => {
       const data = await res.json();
       if (res.ok) {
         localStorage.setItem('token', data.token);
+        toast.success('Account created!');
         navigate('/');
       } else {
-        alert(data.message || 'Registration failed');
+        toast.error(data.message || 'Registration failed');
       }
     } catch (err) {
       console.error('Error:', err);
-      alert('Server error');
+      toast.error('Server error');
     }
   };
 

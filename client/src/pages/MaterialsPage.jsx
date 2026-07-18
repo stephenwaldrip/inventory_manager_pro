@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
 import axiosInstance from '../utils/axiosInstance';
+import { useToast } from '../context/ToastContext';
 
 const MaterialsPage = () => {
+  const { toast } = useToast();
   const [materials, setMaterials] = useState([]);
   const [locations, setLocations] = useState([]);
   const [categories, setCategories] = useState([]);
@@ -59,12 +61,9 @@ const MaterialsPage = () => {
       });
       setMaterials((prev) => [...prev, res.data]);
       setNewMaterial({ name: '', type: '', quantity: 0, location: '', category: '', notes: '' });
+      toast.success('Material added.');
     } catch (err) {
-      if (err.response) {
-        alert(`Failed: ${err.response.data.message}`);
-      } else {
-        alert('An error occurred.');
-      }
+      toast.error(err.response?.data?.message || 'Failed to add material.');
     }
   };
 
@@ -73,8 +72,9 @@ const MaterialsPage = () => {
     try {
       await axiosInstance.delete(`/materials/${id}`);
       setMaterials((prev) => prev.filter((m) => m._id !== id));
+      toast.success('Material deleted.');
     } catch (err) {
-      alert('Failed to delete material.');
+      toast.error('Failed to delete material.');
     }
   };
 
@@ -90,8 +90,9 @@ const MaterialsPage = () => {
       });
       setMaterials((prev) => prev.map((m) => m._id === res.data._id ? res.data : m));
       setEditingMaterial(null);
+      toast.success('Material updated.');
     } catch (err) {
-      alert('Failed to update material.');
+      toast.error('Failed to update material.');
     }
   };
 

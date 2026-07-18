@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { useContext } from 'react';
 import { AuthProvider, AuthContext } from './context/AuthContext';
+import { ToastProvider } from './context/ToastContext';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import MaterialsPage from './pages/MaterialsPage';
@@ -20,22 +21,24 @@ const PrivateRoute = ({ element }) => {
 function App() {
   return (
     <AuthProvider>
-      <Router>
-        <Routes>
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/register" element={<RegisterPage />} />
-          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-          <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
+      <ToastProvider>
+        <Router>
+          <Routes>
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/register" element={<RegisterPage />} />
+            <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+            <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
 
-          <Route element={<Layout />}>
-            <Route path="/" element={<PrivateRoute element={<DashboardPage />} />} />
-            <Route path="/materials" element={<PrivateRoute element={<MaterialsPage />} />} />
-            <Route path="/users" element={<PrivateRoute element={<UsersPage />} />} />
-            <Route path="/locations" element={<PrivateRoute element={<LocationsPage />} />} />
-            <Route path="/categories" element={<PrivateRoute element={<CategoriesPage />} />} />
-          </Route>
-        </Routes>
-      </Router>
+            <Route element={<Layout />}>
+              <Route path="/" element={<PrivateRoute element={<DashboardPage />} />} />
+              <Route path="/materials" element={<PrivateRoute element={<MaterialsPage />} />} />
+              <Route path="/users" element={<PrivateRoute element={<UsersPage />} />} />
+              <Route path="/locations" element={<PrivateRoute element={<LocationsPage />} />} />
+              <Route path="/categories" element={<PrivateRoute element={<CategoriesPage />} />} />
+            </Route>
+          </Routes>
+        </Router>
+      </ToastProvider>
     </AuthProvider>
   );
 }

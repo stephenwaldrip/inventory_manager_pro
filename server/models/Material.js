@@ -2,6 +2,12 @@ import mongoose from 'mongoose';
 
 const materialSchema = new mongoose.Schema(
   {
+    tenantId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Organization',
+      required: true,
+      index: true,
+    },
     name: {
       type: String,
       required: [true, 'Please add a material name'],

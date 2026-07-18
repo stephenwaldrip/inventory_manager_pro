@@ -2,11 +2,9 @@ import Category from '../models/Category.js';
 import Activity from '../models/Activity.js';
 import sendEmail from '../utils/sendEmail.js';
 
-const ADMIN_EMAIL = 'stephenwaldrip90@gmail.com';
-
 const getCategories = async (req, res) => {
   try {
-    const categories = await Category.find();
+    const categories = await Category.find({ tenantId: req.tenantId });
     res.json(categories);
   } catch (err) {
     res.status(500).json({ message: 'Server error' });
@@ -15,7 +13,7 @@ const getCategories = async (req, res) => {
 
 const getCategoryById = async (req, res) => {
   try {
-    const category = await Category.findById(req.params.id);
+    const category = await Category.findOne({ _id: req.params.id, tenantId: req.tenantId });
     if (!category) return res.status(404).json({ message: 'Category not found' });
     res.json(category);
   } catch (err) {
@@ -26,17 +24,24 @@ const getCategoryById = async (req, res) => {
 const createCategory = async (req, res) => {
   try {
     const { name } = req.body;
-    const newCategory = new Category({ name });
+    if (!name) return res.status(400).json({ message: 'Name is required' });
+
+    // Uniqueness is per-org, so check within this tenant only.
+    const exists = await Category.findOne({ name, tenantId: req.tenantId });
+    if (exists) return res.status(400).json({ message: 'Category already exists' });
+
+    const newCategory = new Category({ name, tenantId: req.tenantId });
     await newCategory.save();
 
     try {
       await Activity.create({
+        tenantId: req.tenantId,
         type: 'material_added',
         message: `Category "${name}" was created`,
         user: req.user?.email,
       });
       sendEmail({
-        to: ADMIN_EMAIL,
+        to: req.user?.email,
         subject: '🗂️ New Category Created',
         html: `<p><strong>${req.user?.email}</strong> created a new category: <strong>${name}</strong></p>`,
       });
@@ -53,7 +58,7 @@ const createCategory = async (req, res) => {
 const updateCategory = async (req, res) => {
   try {
     const { name } = req.body;
-    const category = await Category.findById(req.params.id);
+    const category = await Category.findOne({ _id: req.params.id, tenantId: req.tenantId });
     if (!category) return res.status(404).json({ message: 'Category not found' });
 
     category.name = name || category.name;
@@ -61,12 +66,13 @@ const updateCategory = async (req, res) => {
 
     try {
       await Activity.create({
+        tenantId: req.tenantId,
         type: 'material_updated',
         message: `Category "${category.name}" was updated`,
         user: req.user?.email,
       });
       sendEmail({
-        to: ADMIN_EMAIL,
+        to: req.user?.email,
         subject: '✏️ Category Updated',
         html: `<p><strong>${req.user?.email}</strong> updated category: <strong>${category.name}</strong></p>`,
       });
@@ -82,19 +88,20 @@ const updateCategory = async (req, res) => {
 
 const deleteCategory = async (req, res) => {
   try {
-    const category = await Category.findById(req.params.id);
+    const category = await Category.findOne({ _id: req.params.id, tenantId: req.tenantId });
     if (!category) return res.status(404).json({ message: 'Category not found' });
 
     await category.deleteOne();
 
     try {
       await Activity.create({
+        tenantId: req.tenantId,
         type: 'material_deleted',
         message: `Category "${category.name}" was deleted`,
         user: req.user?.email,
       });
       sendEmail({
-        to: ADMIN_EMAIL,
+        to: req.user?.email,
         subject: '🗑️ Category Deleted',
         html: `<p><strong>${req.user?.email}</strong> deleted category: <strong>${category.name}</strong></p>`,
       });

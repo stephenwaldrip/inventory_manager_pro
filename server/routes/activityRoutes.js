@@ -6,7 +6,7 @@ const router = express.Router();
 
 router.get('/', protect, async (req, res) => {
   try {
-    const activities = await Activity.find()
+    const activities = await Activity.find({ tenantId: req.tenantId })
       .sort({ createdAt: -1 })
       .limit(20);
     res.json(activities);

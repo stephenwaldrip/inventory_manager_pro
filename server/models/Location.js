@@ -1,11 +1,16 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 const locationSchema = new mongoose.Schema(
   {
+    tenantId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Organization',
+      required: true,
+      index: true,
+    },
     name: {
       type: String,
       required: true,
-      unique: true,
       trim: true,
     },
     description: {
@@ -20,4 +25,4 @@ const locationSchema = new mongoose.Schema(
 
 const Location = mongoose.model('Location', locationSchema);
 
-module.exports = Location;
+export default Location;

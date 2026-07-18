@@ -5,6 +5,7 @@ import { useToast } from '../context/ToastContext';
 const RegisterPage = () => {
   const { toast } = useToast();
   const [formData, setFormData] = useState({
+    organizationName: '',
     name: '',
     username: '',
     email: '',
@@ -27,14 +28,15 @@ const RegisterPage = () => {
       const res = await fetch(apiUrl + '/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...formData, role: 'admin' }),
+        body: JSON.stringify(formData),
       });
 
       const data = await res.json();
       if (res.ok) {
         localStorage.setItem('token', data.token);
-        toast.success('Account created!');
+        toast.success('Organization created!');
         navigate('/');
+        window.location.reload();
       } else {
         toast.error(data.message || 'Registration failed');
       }
@@ -69,14 +71,20 @@ const RegisterPage = () => {
   return (
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#f3f4f6' }}>
       <div style={{ backgroundColor: 'white', padding: '40px', borderRadius: '12px', boxShadow: '0 4px 12px rgba(0,0,0,0.1)', width: '100%', maxWidth: '400px' }}>
-        <h2 style={{ marginBottom: '24px', fontSize: '24px', fontWeight: 'bold', textAlign: 'center' }}>Create Account</h2>
+        <h2 style={{ marginBottom: '8px', fontSize: '24px', fontWeight: 'bold', textAlign: 'center' }}>Create Your Organization</h2>
+        <p style={{ textAlign: 'center', color: '#64748b', fontSize: '14px', marginBottom: '24px' }}>
+          You'll be the administrator. Invite your team once you're in.
+        </p>
         <form onSubmit={handleSubmit}>
-          <input style={inputStyle} type="text" name="name" placeholder="Full Name" onChange={handleChange} required />
-          <input style={inputStyle} type="text" name="username" placeholder="Username" onChange={handleChange} required />
+          <input style={inputStyle} type="text" name="organizationName" placeholder="Organization Name" onChange={handleChange} required />
+          <input style={inputStyle} type="text" name="name" placeholder="Your Full Name" onChange={handleChange} required />
           <input style={inputStyle} type="email" name="email" placeholder="Email" onChange={handleChange} required />
-          <input style={inputStyle} type="password" name="password" placeholder="Password" onChange={handleChange} required />
-          <button style={buttonStyle} type="submit">Register</button>
+          <input style={inputStyle} type="password" name="password" placeholder="Password (min 8 characters)" onChange={handleChange} required minLength={8} />
+          <button style={buttonStyle} type="submit">Create Organization</button>
         </form>
+        <p style={{ textAlign: 'center', marginTop: '16px', fontSize: '13px', color: '#64748b' }}>
+          Already have an account? <a href="/login" style={{ color: '#4f46e5' }}>Sign in</a>
+        </p>
       </div>
     </div>
   );

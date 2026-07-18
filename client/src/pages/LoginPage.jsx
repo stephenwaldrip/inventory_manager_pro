@@ -22,19 +22,6 @@ function LoginPage() {
     }
   };
 
-  const handleDemoLogin = async () => {
-    try {
-      const res = await axios.post('/auth/login', {
-        email: 'demo@inventorymanagerpro.com',
-        password: 'Demo1234!',
-      });
-      login(res.data.token);
-      navigate('/');
-    } catch (err) {
-      toast.error('Demo login failed. Please try again.');
-    }
-  };
-
   const inputStyle = {
     display: 'block',
     width: '100%',
@@ -52,18 +39,6 @@ function LoginPage() {
     backgroundColor: '#4f46e5',
     color: 'white',
     border: 'none',
-    borderRadius: '6px',
-    fontSize: '16px',
-    cursor: 'pointer',
-    marginBottom: '10px',
-  };
-
-  const demoButtonStyle = {
-    width: '100%',
-    padding: '10px',
-    backgroundColor: 'white',
-    color: '#4f46e5',
-    border: '2px solid #4f46e5',
     borderRadius: '6px',
     fontSize: '16px',
     cursor: 'pointer',
@@ -100,22 +75,8 @@ function LoginPage() {
           </Link>
         </p>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
-          <div style={{ flex: 1, height: '1px', backgroundColor: '#e2e8f0' }} />
-          <span style={{ color: '#94a3b8', fontSize: '12px' }}>or</span>
-          <div style={{ flex: 1, height: '1px', backgroundColor: '#e2e8f0' }} />
-        </div>
-
-        <button style={demoButtonStyle} onClick={handleDemoLogin}>
-          🎮 Try Demo Account
-        </button>
-
-        <p style={{ textAlign: 'center', marginTop: '8px', fontSize: '12px', color: '#94a3b8' }}>
-          Demo credentials: demo@inventorymanagerpro.com
-        </p>
-
         <p style={{ textAlign: 'center', marginTop: '16px', fontSize: '14px', color: '#64748b' }}>
-          Don't have an account? <Link to="/register" style={{ color: '#4f46e5' }}>Register</Link>
+          Don't have an account? <Link to="/register" style={{ color: '#4f46e5' }}>Create an organization</Link>
         </p>
       </div>
     </div>

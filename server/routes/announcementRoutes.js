@@ -6,7 +6,8 @@ const router = express.Router();
 
 router.get('/', protect, async (req, res) => {
   try {
-    const announcements = await Announcement.find().sort({ pinned: -1, createdAt: -1 });
+    const announcements = await Announcement.find({ tenantId: req.tenantId })
+      .sort({ pinned: -1, createdAt: -1 });
     res.json(announcements);
   } catch (err) {
     res.status(500).json({ message: 'Server error' });
@@ -21,6 +22,7 @@ router.post('/', protect, adminOnly, async (req, res) => {
       message,
       pinned,
       postedBy: req.user?.email,
+      tenantId: req.tenantId,
     });
     res.status(201).json(announcement);
   } catch (err) {
@@ -30,7 +32,11 @@ router.post('/', protect, adminOnly, async (req, res) => {
 
 router.delete('/:id', protect, adminOnly, async (req, res) => {
   try {
-    await Announcement.findByIdAndDelete(req.params.id);
+    const deleted = await Announcement.findOneAndDelete({
+      _id: req.params.id,
+      tenantId: req.tenantId,
+    });
+    if (!deleted) return res.status(404).json({ message: 'Announcement not found' });
     res.json({ message: 'Announcement deleted' });
   } catch (err) {
     res.status(500).json({ message: 'Server error' });

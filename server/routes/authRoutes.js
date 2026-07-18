@@ -3,6 +3,7 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
 import User from '../models/User.js';
+import Organization from '../models/Organization.js';
 import Activity from '../models/Activity.js';
 import sendEmail from '../utils/sendEmail.js';
 
@@ -16,7 +17,7 @@ const hashToken = (token) =>
   crypto.createHash('sha256').update(token).digest('hex');
 
 router.post('/register', async (req, res) => {
-  const { name, email, password } = req.body;
+  const { name, email, password, organizationName } = req.body;
 
   if (!isNonEmptyString(email) || !isNonEmptyString(password)) {
     return res.status(400).json({ message: 'Valid email and password are required' });
@@ -24,35 +25,64 @@ router.post('/register', async (req, res) => {
   if (password.length < 8) {
     return res.status(400).json({ message: 'Password must be at least 8 characters' });
   }
+  if (!isNonEmptyString(organizationName)) {
+    return res.status(400).json({ message: 'Organization name is required' });
+  }
 
   try {
     const existingUser = await User.findOne({ email });
     if (existingUser) return res.status(400).json({ message: 'User already exists' });
 
-    const user = await User.create({ name, email, password, role: 'user' });
+    // Build a URL-safe slug, adding a suffix if that slug is taken.
+    const baseSlug = organizationName
+      .toLowerCase()
+      .trim()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '');
+
+    let slug = baseSlug;
+    let suffix = 0;
+    while (await Organization.findOne({ slug })) {
+      suffix += 1;
+      slug = `${baseSlug}-${suffix}`;
+    }
+
+    const organization = await Organization.create({ name: organizationName, slug });
+
+    // Whoever registers owns the new org.
+    const user = await User.create({
+      name,
+      email,
+      password,
+      role: 'superadmin',
+      tenantId: organization._id,
+    });
+
+    organization.createdBy = user._id;
+    await organization.save();
 
     try {
       await Activity.create({
+        tenantId: organization._id,
         type: 'user_added',
-        message: `New user "${email}" registered`,
+        message: `Organization "${organization.name}" created by ${email}`,
         user: email,
       });
-      sendEmail({
-        to: 'stephenwaldrip90@gmail.com',
-        subject: '👤 New User Registered',
-        html: `<p>A new user has registered: <strong>${email}</strong></p>`,
-      });
     } catch (actErr) {
-      console.warn('Activity/email failed:', actErr.message);
+      console.warn('Activity failed:', actErr.message);
     }
 
     const token = jwt.sign(
-      { userId: user._id, role: user.role, email: user.email },
+      { userId: user._id, role: user.role, email: user.email, tenantId: organization._id },
       process.env.JWT_SECRET,
       { expiresIn: '1d' }
     );
 
-    res.status(201).json({ token, user: { email: user.email, role: user.role } });
+    res.status(201).json({
+      token,
+      user: { email: user.email, role: user.role },
+      organization: { name: organization.name, slug: organization.slug },
+    });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Server error' });
@@ -79,21 +109,17 @@ router.post('/login', async (req, res) => {
 
     try {
       await Activity.create({
+        tenantId: user.tenantId,
         type: 'user_login',
         message: `"${email}" logged in`,
         user: email,
       });
-      sendEmail({
-        to: 'stephenwaldrip90@gmail.com',
-        subject: '🔐 User Login',
-        html: `<p><strong>${email}</strong> just logged in to Inventory Manager Pro.</p>`,
-      });
     } catch (actErr) {
-      console.warn('Activity/email failed:', actErr.message);
+      console.warn('Activity failed:', actErr.message);
     }
 
     const token = jwt.sign(
-      { userId: user._id, role: user.role, email: user.email },
+      { userId: user._id, role: user.role, email: user.email, tenantId: user.tenantId },
       process.env.JWT_SECRET,
       { expiresIn: '1d' }
     );

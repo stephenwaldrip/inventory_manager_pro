@@ -4,7 +4,9 @@ import sendEmail from '../utils/sendEmail.js';
 
 export const getMaterials = async (req, res) => {
   try {
-    const materials = await Material.find().populate('location').populate('category');
+    const materials = await Material.find({ tenantId: req.tenantId })
+      .populate('location')
+      .populate('category');
     res.status(200).json(materials);
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
@@ -13,7 +15,9 @@ export const getMaterials = async (req, res) => {
 
 export const getMaterialById = async (req, res) => {
   try {
-    const material = await Material.findById(req.params.id).populate('location').populate('category');
+    const material = await Material.findOne({ _id: req.params.id, tenantId: req.tenantId })
+      .populate('location')
+      .populate('category');
     if (!material) {
       return res.status(404).json({ message: 'Material not found' });
     }
@@ -25,16 +29,18 @@ export const getMaterialById = async (req, res) => {
 
 export const createMaterial = async (req, res) => {
   try {
-    const material = await Material.create(req.body);
+    // tenantId comes last so a client-supplied one in req.body can't override it.
+    const material = await Material.create({ ...req.body, tenantId: req.tenantId });
 
     try {
       await Activity.create({
+        tenantId: req.tenantId,
         type: 'material_added',
         message: `Material "${material.name}" was added`,
         user: req.user?.email,
       });
       sendEmail({
-        to: 'stephenwaldrip90@gmail.com',
+        to: req.user?.email,
         subject: '📦 New Material Added',
         html: `<p><strong>${req.user?.email}</strong> added a new material: <strong>${material.name}</strong> (Qty: ${material.quantity})</p>`,
       });
@@ -45,12 +51,13 @@ export const createMaterial = async (req, res) => {
     if (material.quantity < 5) {
       try {
         await Activity.create({
+          tenantId: req.tenantId,
           type: 'low_inventory',
           message: `Low inventory alert: "${material.name}" has only ${material.quantity} left`,
           user: req.user?.email,
         });
         sendEmail({
-          to: 'stephenwaldrip90@gmail.com',
+          to: req.user?.email,
           subject: '⚠️ Low Inventory Alert',
           html: `<p>The item <strong>${material.name}</strong> is running low (only ${material.quantity} left).</p>`,
         });
@@ -68,7 +75,13 @@ export const createMaterial = async (req, res) => {
 export const updateMaterial = async (req, res) => {
   try {
     const { id } = req.params;
-    const updated = await Material.findByIdAndUpdate(id, req.body, { new: true });
+    // Strip tenantId from the payload so an update can't move a doc to another org.
+    const { tenantId, ...updates } = req.body;
+    const updated = await Material.findOneAndUpdate(
+      { _id: id, tenantId: req.tenantId },
+      updates,
+      { new: true }
+    );
 
     if (!updated) {
       return res.status(404).json({ message: 'Material not found' });
@@ -76,12 +89,13 @@ export const updateMaterial = async (req, res) => {
 
     try {
       await Activity.create({
+        tenantId: req.tenantId,
         type: 'material_updated',
         message: `Material "${updated.name}" was updated`,
         user: req.user?.email,
       });
       sendEmail({
-        to: 'stephenwaldrip90@gmail.com',
+        to: req.user?.email,
         subject: '✏️ Material Updated',
         html: `<p><strong>${req.user?.email}</strong> updated material: <strong>${updated.name}</strong></p>`,
       });
@@ -92,12 +106,13 @@ export const updateMaterial = async (req, res) => {
     if (updated.quantity < 5) {
       try {
         await Activity.create({
+          tenantId: req.tenantId,
           type: 'low_inventory',
           message: `Low inventory alert: "${updated.name}" has only ${updated.quantity} left`,
           user: req.user?.email,
         });
         sendEmail({
-          to: 'stephenwaldrip90@gmail.com',
+          to: req.user?.email,
           subject: '⚠️ Low Inventory Alert',
           html: `<p>The item <strong>${updated.name}</strong> is running low (only ${updated.quantity} left).</p>`,
         });
@@ -115,7 +130,7 @@ export const updateMaterial = async (req, res) => {
 export const deleteMaterial = async (req, res) => {
   try {
     const { id } = req.params;
-    const deleted = await Material.findByIdAndDelete(id);
+    const deleted = await Material.findOneAndDelete({ _id: id, tenantId: req.tenantId });
 
     if (!deleted) {
       return res.status(404).json({ message: 'Material not found' });
@@ -123,12 +138,13 @@ export const deleteMaterial = async (req, res) => {
 
     try {
       await Activity.create({
+        tenantId: req.tenantId,
         type: 'material_deleted',
         message: `Material "${deleted.name}" was deleted`,
         user: req.user?.email,
       });
       sendEmail({
-        to: 'stephenwaldrip90@gmail.com',
+        to: req.user?.email,
         subject: '🗑️ Material Deleted',
         html: `<p><strong>${req.user?.email}</strong> deleted material: <strong>${deleted.name}</strong></p>`,
       });

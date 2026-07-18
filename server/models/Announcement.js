@@ -2,6 +2,12 @@ import mongoose from 'mongoose';
 
 const announcementSchema = new mongoose.Schema(
   {
+    tenantId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Organization',
+      required: true,
+      index: true,
+    },
     title: {
       type: String,
       required: true,

@@ -23,7 +23,11 @@ router.put('/:id/role', protect, superAdminOnly, async (req, res) => {
     if (!['user', 'admin'].includes(role)) {
       return res.status(400).json({ message: 'Invalid role' });
     }
-    const user = await User.findByIdAndUpdate(req.params.id, { role }, { new: true });
+    const user = await User.findOneAndUpdate(
+      { _id: req.params.id, tenantId: req.tenantId },
+      { role },
+      { new: true }
+    ).select('-password');
     if (!user) return res.status(404).json({ message: 'User not found' });
     res.json({ message: 'Role updated', user });
   } catch (err) {

@@ -18,6 +18,12 @@ export const protect = async (req, res, next) => {
       if (req.user.active === false) {
         return res.status(403).json({ message: 'Account is suspended' });
       }
+      // Every authenticated request carries the caller's org. Read it from the
+      // user record (not the token) so a stale token can't outlive a move.
+      if (!req.user.tenantId) {
+        return res.status(403).json({ message: 'No organization assigned' });
+      }
+      req.tenantId = req.user.tenantId;
 
       next();
     } catch (err) {

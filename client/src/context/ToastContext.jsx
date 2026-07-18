@@ -11,15 +11,20 @@ const toastStyles = {
 };
 
 const ToastContainer = ({ toasts, removeToast }) => (
-  <div style={{
-    position: 'fixed',
-    top: '20px',
-    right: '20px',
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '10px',
-    zIndex: 9999,
-  }}>
+  <div
+    role="status"
+    aria-live="polite"
+    aria-atomic="false"
+    style={{
+      position: 'fixed',
+      top: '20px',
+      right: '20px',
+      display: 'flex',
+      flexDirection: 'column',
+      gap: '10px',
+      zIndex: 9999,
+    }}
+  >
     {toasts.map((t) => {
       const style = toastStyles[t.type] || toastStyles.info;
       return (

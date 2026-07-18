@@ -108,4 +108,75 @@ describe('LoginPage', () => {
     });
     expect(mockLogin).not.toHaveBeenCalled();
   });
+
+  test('fields are labelled and wired for password managers', () => {
+    renderLogin();
+    const email = screen.getByLabelText('Email');
+    const password = screen.getByLabelText('Password');
+    expect(email).toHaveAttribute('autocomplete', 'username');
+    expect(email).toHaveAttribute('name', 'email');
+    expect(password).toHaveAttribute('autocomplete', 'current-password');
+    expect(password).toHaveAttribute('name', 'password');
+  });
+
+  test('submitting with Enter from a field logs in', async () => {
+    axios.post.mockResolvedValueOnce({ data: { token: 'jwt-token-123' } });
+    renderLogin();
+
+    fireEvent.change(screen.getByLabelText('Email'), { target: { value: 'ada@example.com' } });
+    fireEvent.change(screen.getByLabelText('Password'), { target: { value: 'supersecret' } });
+    // Enter in a text field submits the owning form.
+    fireEvent.submit(screen.getByLabelText('Password').closest('form'));
+
+    await waitFor(() => expect(mockNavigate).toHaveBeenCalledWith('/'));
+    expect(axios.post).toHaveBeenCalledWith('/auth/login', {
+      email: 'ada@example.com',
+      password: 'supersecret',
+    });
+  });
+
+  test('empty fields are rejected without hitting the network', () => {
+    renderLogin();
+    fireEvent.click(screen.getByRole('button', { name: /login/i }));
+
+    expect(axios.post).not.toHaveBeenCalled();
+    expect(mockToastError).toHaveBeenCalledWith('Please enter your email and password.');
+  });
+
+  test('whitespace-only email is rejected without hitting the network', () => {
+    renderLogin();
+    fillAndSubmit({ email: '   ', password: 'supersecret' });
+
+    expect(axios.post).not.toHaveBeenCalled();
+    expect(mockToastError).toHaveBeenCalledWith('Please enter your email and password.');
+  });
+
+  test('button disables while the request is in flight to block double submits', async () => {
+    let resolvePost;
+    axios.post.mockReturnValueOnce(new Promise((r) => { resolvePost = r; }));
+    renderLogin();
+
+    fillAndSubmit({ email: 'ada@example.com', password: 'supersecret' });
+
+    const button = screen.getByRole('button', { name: /signing in/i });
+    await waitFor(() => expect(button).toBeDisabled());
+
+    // Extra clicks during the in-flight request must not fire more requests.
+    fireEvent.click(button);
+    fireEvent.click(button);
+    expect(axios.post).toHaveBeenCalledTimes(1);
+
+    resolvePost({ data: { token: 'jwt-token-123' } });
+    await waitFor(() => expect(mockNavigate).toHaveBeenCalledWith('/'));
+  });
+
+  test('button re-enables after a failed login so the user can retry', async () => {
+    axios.post.mockRejectedValueOnce(new Error('Network Error'));
+    renderLogin();
+
+    fillAndSubmit({ email: 'ada@example.com', password: 'wrong' });
+
+    await waitFor(() => expect(mockToastError).toHaveBeenCalled());
+    expect(screen.getByRole('button', { name: /login/i })).toBeEnabled();
+  });
 });

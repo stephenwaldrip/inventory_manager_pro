@@ -4,7 +4,10 @@
   "type": "module",
   "scripts": {
     "dev": "concurrently \"npm run dev --prefix server\" \"npm start --prefix client\"",
-    "start": "node server/server.js"
+    "start": "node server/server.js",
+    "test": "npm run test:server && npm run test:client",
+    "test:server": "npm test --prefix server",
+    "test:client": "npm test --prefix client -- --watchAll=false"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",

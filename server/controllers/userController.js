@@ -23,6 +23,13 @@ export const getUsers = async (req, res) => {
 export const createUser = async (req, res) => {
   try {
     const { name, email, role } = req.body;
+
+    // Without this a missing address falls through to a schema validation
+    // error and surfaces as a 500, which reads as "our fault" to the caller.
+    if (typeof email !== 'string' || !/^\S+@\S+\.\S+$/.test(email.trim())) {
+      return res.status(400).json({ message: 'A valid email address is required' });
+    }
+
     // Email is globally unique (one email, one org), so this check stays unscoped.
     const userExists = await User.findOne({ email });
     if (userExists) return res.status(400).json({ message: 'User already exists' });
@@ -128,8 +135,29 @@ export const resendInvite = async (req, res) => {
   }
 };
 
+// An org with no superadmin is unrecoverable: the role endpoint only grants
+// 'user' and 'admin', so nobody can ever be promoted back into the seat.
+const isLastSuperadmin = async (user, tenantId) => {
+  if (user.role !== 'superadmin') return false;
+  const remaining = await User.countDocuments({ tenantId, role: 'superadmin' });
+  return remaining <= 1;
+};
+
 export const deleteUser = async (req, res) => {
   try {
+    const target = await User.findOne({ _id: req.params.id, tenantId: req.tenantId });
+    if (!target) return res.status(404).json({ message: 'User not found' });
+
+    // adminOnly admits plain admins, who must not be able to remove the owner.
+    if (target.role === 'superadmin' && req.user?.role !== 'superadmin') {
+      return res.status(403).json({ message: 'Only a superadmin can remove another superadmin' });
+    }
+    if (await isLastSuperadmin(target, req.tenantId)) {
+      return res.status(409).json({
+        message: 'This is the only superadmin. Promote another one before removing this account.',
+      });
+    }
+
     const user = await User.findOneAndDelete({ _id: req.params.id, tenantId: req.tenantId });
     if (!user) return res.status(404).json({ message: 'User not found' });
 
@@ -158,10 +186,25 @@ export const deleteUser = async (req, res) => {
 export const updateUser = async (req, res) => {
   try {
     const { name, email } = req.body;
+
+    const existing = await User.findOne({ _id: req.params.id, tenantId: req.tenantId });
+    if (!existing) return res.status(404).json({ message: 'User not found' });
+
+    // Verified status belongs to the address that was proven, not to the row.
+    // Moving someone to a new address has to re-prove it, or an admin could
+    // hand any address a verified badge — and with it the right to send mail.
+    const update = { name, email };
+    const normalized = typeof email === 'string' ? email.trim().toLowerCase() : undefined;
+    if (normalized && normalized !== existing.email) {
+      update.emailVerified = false;
+      update.verifyToken = undefined;
+      update.verifyTokenExpires = undefined;
+    }
+
     const user = await User.findOneAndUpdate(
       { _id: req.params.id, tenantId: req.tenantId },
-      { name, email },
-      { new: true }
+      update,
+      { new: true, runValidators: true }
     ).select('-password');
     if (!user) return res.status(404).json({ message: 'User not found' });
 
@@ -235,6 +278,14 @@ export const toggleUserStatus = async (req, res) => {
   try {
     const user = await User.findOne({ _id: req.params.id, tenantId: req.tenantId });
     if (!user) return res.status(404).json({ message: 'User not found' });
+
+    // Suspending blocks login, so the only superadmin doing this to themselves
+    // locks the organization out with nobody left who can undo it.
+    if (user.active && (await isLastSuperadmin(user, req.tenantId))) {
+      return res.status(409).json({
+        message: 'This is the only superadmin. Promote another one before suspending this account.',
+      });
+    }
 
     user.active = !user.active;
     await user.save();

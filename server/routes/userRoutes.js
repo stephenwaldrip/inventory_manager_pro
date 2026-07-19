@@ -24,6 +24,20 @@ router.put('/:id/role', protect, superAdminOnly, async (req, res) => {
     if (!['user', 'admin'].includes(role)) {
       return res.status(400).json({ message: 'Invalid role' });
     }
+    const target = await User.findOne({ _id: req.params.id, tenantId: req.tenantId });
+    if (!target) return res.status(404).json({ message: 'User not found' });
+
+    // Demoting the only superadmin orphans the org — this endpoint cannot
+    // grant 'superadmin', so the seat could never be refilled.
+    if (target.role === 'superadmin') {
+      const superadmins = await User.countDocuments({ tenantId: req.tenantId, role: 'superadmin' });
+      if (superadmins <= 1) {
+        return res.status(409).json({
+          message: 'This is the only superadmin. Promote another one before changing this role.',
+        });
+      }
+    }
+
     const user = await User.findOneAndUpdate(
       { _id: req.params.id, tenantId: req.tenantId },
       { role },

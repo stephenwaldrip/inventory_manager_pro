@@ -644,3 +644,137 @@ describe('multi-tenant isolation', () => {
     assert.equal(String(doc.tenantId), String(ownerA.tenantId));
   });
 });
+
+describe('account safety guards', () => {
+  // Creates an active admin in the owner's org with a known password, and
+  // returns a token for them. Invited users have no usable password, so the
+  // account is built directly.
+  async function addAdmin(ownerEmail, email = 'admin@example.com') {
+    const owner = await User.findOne({ email: ownerEmail });
+    await User.create({
+      name: 'Admin',
+      email,
+      password: 'supersecret',
+      role: 'admin',
+      tenantId: owner.tenantId,
+      emailVerified: true,
+    });
+    const res = await request(app)
+      .post('/api/auth/login')
+      .send({ email, password: 'supersecret' });
+    return res.body.token;
+  }
+
+  test('an admin cannot delete the organization owner', async () => {
+    const { body } = await registerVerifiedOrg();
+    const adminToken = await addAdmin(body.email);
+    const owner = await User.findOne({ email: body.email });
+
+    const res = await request(app)
+      .delete(`/api/users/${owner._id}`)
+      .set('Authorization', `Bearer ${adminToken}`);
+
+    assert.equal(res.status, 403);
+    assert.ok(await User.findById(owner._id), 'owner should still exist');
+  });
+
+  test('the last superadmin cannot be deleted', async () => {
+    const { res: reg, body } = await registerVerifiedOrg();
+    const owner = await User.findOne({ email: body.email });
+
+    const res = await request(app)
+      .delete(`/api/users/${owner._id}`)
+      .set('Authorization', `Bearer ${reg.body.token}`);
+
+    assert.equal(res.status, 409);
+    assert.ok(await User.findById(owner._id));
+  });
+
+  test('the last superadmin cannot be demoted, which would orphan the org', async () => {
+    const { res: reg, body } = await registerVerifiedOrg();
+    const owner = await User.findOne({ email: body.email });
+
+    const res = await request(app)
+      .put(`/api/users/${owner._id}/role`)
+      .set('Authorization', `Bearer ${reg.body.token}`)
+      .send({ role: 'admin' });
+
+    assert.equal(res.status, 409);
+    assert.equal((await User.findById(owner._id)).role, 'superadmin');
+  });
+
+  test('a superadmin cannot suspend themselves out of their own org', async () => {
+    const { res: reg, body } = await registerVerifiedOrg();
+    const owner = await User.findOne({ email: body.email });
+
+    const res = await request(app)
+      .put(`/api/users/${owner._id}/status`)
+      .set('Authorization', `Bearer ${reg.body.token}`);
+
+    assert.equal(res.status, 409);
+    assert.equal((await User.findById(owner._id)).active, true);
+  });
+
+  test('changing a user email revokes its verified status', async () => {
+    const { res: reg, body } = await registerVerifiedOrg();
+    const owner = await User.findOne({ email: body.email });
+    await User.create({
+      name: 'Member', email: 'member@example.com', password: 'supersecret',
+      role: 'user', tenantId: owner.tenantId, emailVerified: true,
+    });
+    const member = await User.findOne({ email: 'member@example.com' });
+
+    const res = await request(app)
+      .put(`/api/users/${member._id}`)
+      .set('Authorization', `Bearer ${reg.body.token}`)
+      .send({ name: 'Member', email: 'moved@example.com' });
+
+    assert.equal(res.status, 200);
+    const after = await User.findById(member._id);
+    assert.equal(after.email, 'moved@example.com');
+    assert.equal(after.emailVerified, false, 'the new address is unproven');
+  });
+
+  test('an admin can still delete an ordinary user', async () => {
+    const { res: reg, body } = await registerVerifiedOrg();
+    const owner = await User.findOne({ email: body.email });
+    await User.create({
+      name: 'Temp', email: 'temp@example.com', password: 'supersecret',
+      role: 'user', tenantId: owner.tenantId,
+    });
+    const temp = await User.findOne({ email: 'temp@example.com' });
+
+    const res = await request(app)
+      .delete(`/api/users/${temp._id}`)
+      .set('Authorization', `Bearer ${reg.body.token}`);
+
+    assert.equal(res.status, 200);
+    assert.equal(await User.findById(temp._id), null);
+  });
+});
+
+describe('POST /api/users validation', () => {
+  test('a missing email is a 400, not a 500', async () => {
+    const { res: reg } = await registerVerifiedOrg();
+
+    const res = await request(app)
+      .post('/api/users')
+      .set('Authorization', `Bearer ${reg.body.token}`)
+      .send({ name: 'No Email', role: 'user' });
+
+    assert.equal(res.status, 400);
+    assert.match(res.body.message, /valid email/i);
+  });
+
+  test('a malformed email is rejected before any account is made', async () => {
+    const { res: reg } = await registerVerifiedOrg();
+
+    const res = await request(app)
+      .post('/api/users')
+      .set('Authorization', `Bearer ${reg.body.token}`)
+      .send({ name: 'Bad', email: 'not-an-email', role: 'user' });
+
+    assert.equal(res.status, 400);
+    assert.equal(await User.countDocuments({ name: 'Bad' }), 0);
+  });
+});

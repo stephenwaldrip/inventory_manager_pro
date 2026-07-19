@@ -43,6 +43,19 @@ export const adminOnly = (req, res, next) => {
   }
 };
 
+// Gates actions that send mail on the org's behalf. An unverified signup could
+// otherwise use invites to relay mail to addresses it doesn't control.
+export const verifiedOnly = (req, res, next) => {
+  if (req.user && req.user.emailVerified) {
+    next();
+  } else {
+    res.status(403).json({
+      message: 'Confirm your email address before inviting teammates.',
+      emailVerificationRequired: true,
+    });
+  }
+};
+
 export const superAdminOnly = (req, res, next) => {
   if (req.user && req.user.role === 'superadmin') {
     next();

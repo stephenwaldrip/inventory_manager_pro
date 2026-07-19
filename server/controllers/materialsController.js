@@ -1,6 +1,7 @@
 import Material from '../models/Material.js';
 import Activity from '../models/Activity.js';
 import sendEmail from '../utils/sendEmail.js';
+import { html } from '../utils/html.js';
 
 export const getMaterials = async (req, res) => {
   try {
@@ -42,7 +43,7 @@ export const createMaterial = async (req, res) => {
       sendEmail({
         to: req.user?.email,
         subject: '📦 New Material Added',
-        html: `<p><strong>${req.user?.email}</strong> added a new material: <strong>${material.name}</strong> (Qty: ${material.quantity})</p>`,
+        html: html`<p><strong>${req.user?.email}</strong> added a new material: <strong>${material.name}</strong> (Qty: ${material.quantity})</p>`,
       });
     } catch (actErr) {
       console.warn('Activity/email failed:', actErr.message);
@@ -59,7 +60,7 @@ export const createMaterial = async (req, res) => {
         sendEmail({
           to: req.user?.email,
           subject: '⚠️ Low Inventory Alert',
-          html: `<p>The item <strong>${material.name}</strong> is running low (only ${material.quantity} left).</p>`,
+          html: html`<p>The item <strong>${material.name}</strong> is running low (only ${material.quantity} left).</p>`,
         });
       } catch (emailErr) {
         console.warn('Low inventory email failed:', emailErr.message);
@@ -97,7 +98,7 @@ export const updateMaterial = async (req, res) => {
       sendEmail({
         to: req.user?.email,
         subject: '✏️ Material Updated',
-        html: `<p><strong>${req.user?.email}</strong> updated material: <strong>${updated.name}</strong></p>`,
+        html: html`<p><strong>${req.user?.email}</strong> updated material: <strong>${updated.name}</strong></p>`,
       });
     } catch (actErr) {
       console.warn('Activity/email failed:', actErr.message);
@@ -114,7 +115,7 @@ export const updateMaterial = async (req, res) => {
         sendEmail({
           to: req.user?.email,
           subject: '⚠️ Low Inventory Alert',
-          html: `<p>The item <strong>${updated.name}</strong> is running low (only ${updated.quantity} left).</p>`,
+          html: html`<p>The item <strong>${updated.name}</strong> is running low (only ${updated.quantity} left).</p>`,
         });
       } catch (emailErr) {
         console.warn('Low inventory email failed:', emailErr.message);
@@ -146,7 +147,7 @@ export const deleteMaterial = async (req, res) => {
       sendEmail({
         to: req.user?.email,
         subject: '🗑️ Material Deleted',
-        html: `<p><strong>${req.user?.email}</strong> deleted material: <strong>${deleted.name}</strong></p>`,
+        html: html`<p><strong>${req.user?.email}</strong> deleted material: <strong>${deleted.name}</strong></p>`,
       });
     } catch (actErr) {
       console.warn('Activity/email failed:', actErr.message);

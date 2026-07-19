@@ -1,6 +1,7 @@
 import Location from '../models/Location.js';
 import Activity from '../models/Activity.js';
 import sendEmail from '../utils/sendEmail.js';
+import { html } from '../utils/html.js';
 
 const createLocation = async (req, res) => {
   try {
@@ -24,7 +25,7 @@ const createLocation = async (req, res) => {
       sendEmail({
         to: req.user?.email,
         subject: '📍 New Location Created',
-        html: `<p><strong>${req.user?.email}</strong> created a new location: <strong>${name}</strong></p>`,
+        html: html`<p><strong>${req.user?.email}</strong> created a new location: <strong>${name}</strong></p>`,
       });
     } catch (actErr) {
       console.warn('Activity/email failed:', actErr.message);
@@ -76,7 +77,7 @@ const updateLocation = async (req, res) => {
       sendEmail({
         to: req.user?.email,
         subject: '✏️ Location Updated',
-        html: `<p><strong>${req.user?.email}</strong> updated location: <strong>${location.name}</strong></p>`,
+        html: html`<p><strong>${req.user?.email}</strong> updated location: <strong>${location.name}</strong></p>`,
       });
     } catch (actErr) {
       console.warn('Activity/email failed:', actErr.message);
@@ -103,7 +104,7 @@ const deleteLocation = async (req, res) => {
       sendEmail({
         to: req.user?.email,
         subject: '🗑️ Location Deleted',
-        html: `<p><strong>${req.user?.email}</strong> deleted location: <strong>${location.name}</strong></p>`,
+        html: html`<p><strong>${req.user?.email}</strong> deleted location: <strong>${location.name}</strong></p>`,
       });
     } catch (actErr) {
       console.warn('Activity/email failed:', actErr.message);

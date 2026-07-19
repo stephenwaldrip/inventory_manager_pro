@@ -22,6 +22,19 @@ const userSchema = new mongoose.Schema({
   },
   resetPasswordToken: { type: String },
   resetPasswordExpires: { type: Date },
+
+  // Proof the person controls this address — set by clicking a verification
+  // link, or by accepting an invite (which requires reading the same inbox).
+  emailVerified: { type: Boolean, default: false },
+  verifyToken: { type: String },
+  verifyTokenExpires: { type: Date },
+  // Per-account throttle for resends. The IP limiter on /api/auth doesn't bind
+  // an attacker rotating addresses, and each resend sends mail on our behalf.
+  verifySentAt: { type: Date },
+
+  // Set when an admin invites someone, cleared when they accept. Combined with
+  // emailVerified this is what makes an invite "pending".
+  invitedAt: { type: Date },
 });
 
 userSchema.pre('save', async function (next) {

@@ -2,19 +2,20 @@ import express from 'express';
 import {
   getUsers,
   createUser,
+  resendInvite,
   deleteUser,
   updateUser,
-  resetPassword,
+  sendPasswordReset,
   toggleUserStatus,
 } from '../controllers/userController.js';
-import { protect, adminOnly, superAdminOnly } from '../middleware/authMiddleware.js';
+import { protect, adminOnly, superAdminOnly, verifiedOnly } from '../middleware/authMiddleware.js';
 import User from '../models/User.js';
 
 const router = express.Router();
 
 router.route('/')
   .get(protect, adminOnly, getUsers)
-  .post(protect, adminOnly, createUser);
+  .post(protect, adminOnly, verifiedOnly, createUser);
 
 // Superadmin only routes
 router.put('/:id/role', protect, superAdminOnly, async (req, res) => {
@@ -36,7 +37,11 @@ router.put('/:id/role', protect, superAdminOnly, async (req, res) => {
   }
 });
 
-router.put('/:id/password', protect, superAdminOnly, resetPassword);
+router.post('/:id/resend-invite', protect, adminOnly, verifiedOnly, resendInvite);
+
+// Superadmins send a reset link rather than choosing a password themselves —
+// no admin-known credential, and the user is never locked out of their own account.
+router.post('/:id/send-reset', protect, superAdminOnly, verifiedOnly, sendPasswordReset);
 router.put('/:id/status', protect, superAdminOnly, toggleUserStatus);
 
 // Admin and superadmin routes

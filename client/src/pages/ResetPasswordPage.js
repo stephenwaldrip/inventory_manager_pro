@@ -1,10 +1,14 @@
 import { useState } from 'react';
 import axios from '../utils/axiosInstance';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams, Link } from 'react-router-dom';
 
 function ResetPasswordPage() {
   const { token } = useParams();
   const navigate = useNavigate();
+  // Invite links reuse this page and endpoint; only the wording differs, since
+  // a new user isn't "resetting" anything.
+  const [searchParams] = useSearchParams();
+  const isInvite = searchParams.get('invite') === '1';
 
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
@@ -56,9 +60,13 @@ function ResetPasswordPage() {
   return (
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#f3f4f6' }}>
       <div style={{ backgroundColor: 'white', padding: '40px', borderRadius: '12px', boxShadow: '0 4px 12px rgba(0,0,0,0.1)', width: '100%', maxWidth: '400px' }}>
-        <h2 style={{ marginBottom: '8px', fontSize: '24px', fontWeight: 'bold', textAlign: 'center' }}>Reset Password</h2>
+        <h2 style={{ marginBottom: '8px', fontSize: '24px', fontWeight: 'bold', textAlign: 'center' }}>
+          {isInvite ? 'Set Your Password' : 'Reset Password'}
+        </h2>
         <p style={{ textAlign: 'center', color: '#64748b', fontSize: '14px', marginBottom: '24px' }}>
-          Enter your new password below.
+          {isInvite
+            ? 'Choose a password to activate your account.'
+            : 'Enter your new password below.'}
         </p>
 
         {message && (
@@ -74,20 +82,24 @@ function ResetPasswordPage() {
 
         <input
           style={inputStyle}
-          placeholder="New Password"
+          placeholder={isInvite ? 'Password' : 'New Password'}
           type="password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
         />
         <input
           style={inputStyle}
-          placeholder="Confirm New Password"
+          placeholder={isInvite ? 'Confirm Password' : 'Confirm New Password'}
           type="password"
           value={confirm}
           onChange={(e) => setConfirm(e.target.value)}
         />
         <button style={buttonStyle} onClick={handleSubmit} disabled={loading}>
-          {loading ? 'Resetting...' : 'Reset Password'}
+          {loading
+            ? 'Saving...'
+            : isInvite
+              ? 'Set Password'
+              : 'Reset Password'}
         </button>
 
         <p style={{ textAlign: 'center', marginTop: '16px', fontSize: '14px', color: '#64748b' }}>

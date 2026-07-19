@@ -14,7 +14,7 @@ A full-stack inventory management system built with the MERN stack. Features rol
 - **Materials Management** — add, edit, delete inventory items with location and category assignment
 - **Locations Management** — create and manage storage locations
 - **Categories Management** — organize materials by category
-- **User Management** — admins can add/remove users, superadmin can assign roles, reset passwords, and suspend accounts
+- **User Management** — admins can add/remove users, superadmin can assign roles, send password reset links, and suspend accounts
 - **Announcements** — admins can post pinned announcements visible to all users
 - **Activity Feed** — real-time log of all actions on the dashboard
 - **Email Notifications** — instant email alerts for all activity (logins, material changes, user actions)
@@ -77,6 +77,12 @@ npm install
 ```env
 MONGO_URI=your_mongodb_atlas_connection_string
 JWT_SECRET=your_jwt_secret
+CLIENT_URL=http://localhost:3000
+RESEND_API_KEY=your_resend_api_key
+# Sender address. Must be a domain verified in the Resend dashboard.
+# If unset, falls back to Resend's sandbox sender, which only
+# delivers to the Resend account owner.
+MAIL_FROM=Inventory Manager Pro <no-reply@yourdomain.com>
 EMAIL_USER=your_gmail@gmail.com
 EMAIL_PASS=your_gmail_app_password
 PORT=5000

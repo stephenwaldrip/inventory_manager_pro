@@ -1,6 +1,7 @@
 import Category from '../models/Category.js';
 import Activity from '../models/Activity.js';
 import sendEmail from '../utils/sendEmail.js';
+import { html } from '../utils/html.js';
 
 const getCategories = async (req, res) => {
   try {
@@ -43,7 +44,7 @@ const createCategory = async (req, res) => {
       sendEmail({
         to: req.user?.email,
         subject: '🗂️ New Category Created',
-        html: `<p><strong>${req.user?.email}</strong> created a new category: <strong>${name}</strong></p>`,
+        html: html`<p><strong>${req.user?.email}</strong> created a new category: <strong>${name}</strong></p>`,
       });
     } catch (actErr) {
       console.warn('Activity/email failed:', actErr.message);
@@ -74,7 +75,7 @@ const updateCategory = async (req, res) => {
       sendEmail({
         to: req.user?.email,
         subject: '✏️ Category Updated',
-        html: `<p><strong>${req.user?.email}</strong> updated category: <strong>${category.name}</strong></p>`,
+        html: html`<p><strong>${req.user?.email}</strong> updated category: <strong>${category.name}</strong></p>`,
       });
     } catch (actErr) {
       console.warn('Activity/email failed:', actErr.message);
@@ -103,7 +104,7 @@ const deleteCategory = async (req, res) => {
       sendEmail({
         to: req.user?.email,
         subject: '🗑️ Category Deleted',
-        html: `<p><strong>${req.user?.email}</strong> deleted category: <strong>${category.name}</strong></p>`,
+        html: html`<p><strong>${req.user?.email}</strong> deleted category: <strong>${category.name}</strong></p>`,
       });
     } catch (actErr) {
       console.warn('Activity/email failed:', actErr.message);

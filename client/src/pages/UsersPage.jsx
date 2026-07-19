@@ -73,7 +73,7 @@ const UsersPage = () => {
       fetchUsers();
       toast.success('Role updated.');
     } catch (err) {
-      toast.error('Failed to update role.');
+      toast.error(err.response?.data?.message || 'Failed to update role.');
     }
   };
 
@@ -84,7 +84,7 @@ const UsersPage = () => {
       fetchUsers();
       toast.success('User deleted.');
     } catch (err) {
-      toast.error('Failed to delete user.');
+      toast.error(err.response?.data?.message || 'Failed to delete user.');
     }
   };
 
@@ -100,7 +100,9 @@ const UsersPage = () => {
       fetchUsers();
       toast.success('User updated.');
     } catch (err) {
-      toast.error('Failed to update user.');
+      // The server distinguishes a taken address from a generic failure, and
+      // that difference is the whole point of the message here.
+      toast.error(err.response?.data?.message || 'Failed to update user.');
     }
   };
 
@@ -130,7 +132,7 @@ const UsersPage = () => {
       fetchUsers();
       toast.success('Status updated.');
     } catch (err) {
-      toast.error('Failed to update status.');
+      toast.error(err.response?.data?.message || 'Failed to update status.');
     }
   };
 

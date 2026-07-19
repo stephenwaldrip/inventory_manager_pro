@@ -778,3 +778,80 @@ describe('POST /api/users validation', () => {
     assert.equal(await User.countDocuments({ name: 'Bad' }), 0);
   });
 });
+
+describe('PUT /api/users/:id email conflicts', () => {
+  async function orgWithMember(memberEmail) {
+    const { res: reg, body } = await registerVerifiedOrg();
+    const owner = await User.findOne({ email: body.email });
+    await User.create({
+      name: 'Member', email: memberEmail, password: 'supersecret',
+      role: 'user', tenantId: owner.tenantId,
+    });
+    return { token: reg.body.token, owner, member: await User.findOne({ email: memberEmail }) };
+  }
+
+  test('moving a user onto a taken address is a 400, not a 500', async () => {
+    const { token, owner, member } = await orgWithMember('member@example.com');
+
+    const res = await request(app)
+      .put(`/api/users/${member._id}`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({ name: 'Member', email: owner.email });
+
+    assert.equal(res.status, 400);
+    assert.match(res.body.message, /already in use/i);
+    // The original address must survive a rejected update.
+    assert.equal((await User.findById(member._id)).email, 'member@example.com');
+  });
+
+  test('a collision with another organization is also rejected cleanly', async () => {
+    const { token, member } = await orgWithMember('mine@example.com');
+    const stranger = await registerOrg({ email: 'stranger@example.com' });
+
+    const res = await request(app)
+      .put(`/api/users/${member._id}`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({ email: stranger.body.email });
+
+    assert.equal(res.status, 400);
+    assert.equal((await User.findById(member._id)).email, 'mine@example.com');
+  });
+
+  test('re-saving a user with their own unchanged email still succeeds', async () => {
+    const { token, member } = await orgWithMember('same@example.com');
+
+    const res = await request(app)
+      .put(`/api/users/${member._id}`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({ name: 'Renamed', email: 'same@example.com' });
+
+    assert.equal(res.status, 200);
+    assert.equal(res.body.name, 'Renamed');
+  });
+
+  test('a differently-cased duplicate is caught, since emails are lowercased', async () => {
+    const { token, owner, member } = await orgWithMember('cased@example.com');
+
+    const res = await request(app)
+      .put(`/api/users/${member._id}`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({ email: owner.email.toUpperCase() });
+
+    assert.equal(res.status, 400);
+    assert.equal((await User.findById(member._id)).email, 'cased@example.com');
+  });
+});
+
+describe('POST /api/users email conflicts', () => {
+  test('inviting a differently-cased existing address is a 400, not a 500', async () => {
+    const { res: reg, body } = await registerVerifiedOrg();
+
+    const res = await request(app)
+      .post('/api/users')
+      .set('Authorization', `Bearer ${reg.body.token}`)
+      .send({ name: 'Dupe', email: body.email.toUpperCase(), role: 'user' });
+
+    assert.equal(res.status, 400);
+    assert.equal(await User.countDocuments({ name: 'Dupe' }), 0);
+  });
+});

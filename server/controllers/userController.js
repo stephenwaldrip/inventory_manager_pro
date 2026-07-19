@@ -196,6 +196,14 @@ export const updateUser = async (req, res) => {
     const update = { name, email };
     const normalized = typeof email === 'string' ? email.trim().toLowerCase() : undefined;
     if (normalized && normalized !== existing.email) {
+      // Email is globally unique, so a collision can come from another org we
+      // cannot see. Check unscoped, but only ever report that it is taken —
+      // saying more would leak membership of an organization to an outsider.
+      const taken = await User.exists({ email: normalized, _id: { $ne: existing._id } });
+      if (taken) {
+        return res.status(400).json({ message: 'That email address is already in use' });
+      }
+
       update.emailVerified = false;
       update.verifyToken = undefined;
       update.verifyTokenExpires = undefined;
@@ -226,6 +234,11 @@ export const updateUser = async (req, res) => {
 
     res.status(200).json(user);
   } catch (err) {
+    // Two concurrent updates can both pass the check above; the unique index
+    // is the real arbiter, and losing that race is still the caller's 400.
+    if (err.code === 11000) {
+      return res.status(400).json({ message: 'That email address is already in use' });
+    }
     res.status(500).json({ message: 'Server error' });
   }
 };

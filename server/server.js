@@ -1,6 +1,7 @@
 import dotenv from 'dotenv';
 
 import connectDB from './config/db.js';
+import checkEnv from './config/checkEnv.js';
 import createApp from './app.js';
 
 dotenv.config();
@@ -10,6 +11,8 @@ if (!process.env.JWT_SECRET || process.env.JWT_SECRET.length < 32) {
   console.error('FATAL: JWT_SECRET is missing or too short (need >= 32 chars). Set a strong secret in the environment.');
   process.exit(1);
 }
+
+checkEnv();
 
 connectDB();
 

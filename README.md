@@ -121,7 +121,7 @@ npm start
 
 **Stephen Waldrip**
 - GitHub: [@stephenwaldrip](https://github.com/stephenwaldrip)
-- LinkedIn: [linkedin.com/in/stephenwaldrip](https://linkedin.com/in/stephenwaldrip)
+- LinkedIn: [linkedin.com/in/stephen-waldrip](https://linkedin.com/in/stephen-waldrip)
 
 ---
 

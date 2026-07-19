@@ -74,7 +74,7 @@ const MaterialsPage = () => {
       setMaterials((prev) => prev.filter((m) => m._id !== id));
       toast.success('Material deleted.');
     } catch (err) {
-      toast.error('Failed to delete material.');
+      toast.error(err.response?.data?.message || 'Failed to delete material.');
     }
   };
 
@@ -92,7 +92,7 @@ const MaterialsPage = () => {
       setEditingMaterial(null);
       toast.success('Material updated.');
     } catch (err) {
-      toast.error('Failed to update material.');
+      toast.error(err.response?.data?.message || 'Failed to update material.');
     }
   };
 

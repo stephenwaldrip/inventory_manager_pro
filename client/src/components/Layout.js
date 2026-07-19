@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Outlet } from 'react-router-dom';
 import Navbar from './Navbar';
+import SubscriptionBanner from './SubscriptionBanner';
 
 const Layout = () => {
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
@@ -21,6 +22,7 @@ const Layout = () => {
           padding: '24px',
           paddingTop: isMobile ? '64px' : '24px',
         }}>
+          <SubscriptionBanner />
           <Outlet />
         </main>
       </div>

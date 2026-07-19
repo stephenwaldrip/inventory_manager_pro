@@ -13,6 +13,7 @@ import Layout from './components/Layout.js';
 import ForgotPasswordPage from './pages/ForgotPasswordPage';
 import ResetPasswordPage from './pages/ResetPasswordPage';
 import VerifyEmailPage from './pages/VerifyEmailPage';
+import BillingPage from './pages/BillingPage';
 
 const PrivateRoute = ({ element }) => {
   const { isAuthenticated } = useContext(AuthContext);
@@ -37,6 +38,7 @@ function App() {
               <Route path="/users" element={<PrivateRoute element={<UsersPage />} />} />
               <Route path="/locations" element={<PrivateRoute element={<LocationsPage />} />} />
               <Route path="/categories" element={<PrivateRoute element={<CategoriesPage />} />} />
+              <Route path="/billing" element={<PrivateRoute element={<BillingPage />} />} />
             </Route>
           </Routes>
         </Router>

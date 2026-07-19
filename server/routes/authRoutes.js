@@ -17,6 +17,7 @@ const isNonEmptyString = (v) => typeof v === 'string' && v.trim().length > 0;
 
 const VERIFY_EXPIRY_MS = 24 * 60 * 60 * 1000;
 const RESEND_COOLDOWN_MS = 60 * 1000;
+const TRIAL_DAYS = 14;
 
 const verificationEmail = (verifyUrl) => ({
   subject: '✅ Confirm your email address',
@@ -59,7 +60,15 @@ router.post('/register', async (req, res) => {
       slug = `${baseSlug}-${suffix}`;
     }
 
-    const organization = await Organization.create({ name: organizationName, slug });
+    // New orgs get a trial so the product is usable before anyone reaches for a
+    // card. This is our own trial, not a Stripe one — subscriptionMiddleware
+    // enforces the end date, since no Stripe subscription exists to expire it.
+    const organization = await Organization.create({
+      name: organizationName,
+      slug,
+      subscriptionStatus: 'trialing',
+      currentPeriodEnd: new Date(Date.now() + TRIAL_DAYS * 24 * 60 * 60 * 1000),
+    });
 
     const verifyToken = generateToken();
 

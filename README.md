@@ -14,6 +14,7 @@ A full-stack inventory management system built with the MERN stack. Features rol
 - **Materials Management** — add, edit, delete inventory items with location and category assignment
 - **Locations Management** — create and manage storage locations
 - **Categories Management** — organize materials by category
+- **Subscriptions** — Stripe Checkout with Starter/Pro/Enterprise tiers, seat and material limits, and a read-only lockout when a subscription lapses
 - **User Management** — admins can add/remove users, superadmin can assign roles, send password reset links, and suspend accounts
 - **Announcements** — admins can post pinned announcements visible to all users
 - **Activity Feed** — real-time log of all actions on the dashboard
@@ -83,6 +84,17 @@ RESEND_API_KEY=your_resend_api_key
 # If unset, falls back to Resend's sandbox sender, which only
 # delivers to the Resend account owner.
 MAIL_FROM=Inventory Manager Pro <no-reply@yourdomain.com>
+# Stripe. Use a restricted key (rk_) rather than a secret key (sk_).
+STRIPE_SECRET_KEY=rk_test_your_restricted_key
+# From `stripe listen` locally, or the endpoint secret in the Dashboard.
+STRIPE_WEBHOOK_SECRET=whsec_your_webhook_secret
+# Price IDs, one per tier and billing interval.
+STRIPE_PRICE_STARTER_MONTH=price_...
+STRIPE_PRICE_STARTER_YEAR=price_...
+STRIPE_PRICE_PRO_MONTH=price_...
+STRIPE_PRICE_PRO_YEAR=price_...
+STRIPE_PRICE_ENTERPRISE_MONTH=price_...
+STRIPE_PRICE_ENTERPRISE_YEAR=price_...
 EMAIL_USER=your_gmail@gmail.com
 EMAIL_PASS=your_gmail_app_password
 PORT=5000

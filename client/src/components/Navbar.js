@@ -32,6 +32,7 @@ const Navbar = () => {
     { path: '/locations', label: 'Locations', icon: '📍' },
     { path: '/categories', label: 'Categories', icon: '🗂️' },
     { path: '/users', label: 'Users', icon: '👥' },
+    { path: '/billing', label: 'Billing', icon: '💳' },
   ];
 
   const linkStyle = (path) => ({

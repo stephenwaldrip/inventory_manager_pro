@@ -9,13 +9,23 @@ import {
   toggleUserStatus,
 } from '../controllers/userController.js';
 import { protect, adminOnly, superAdminOnly, verifiedOnly } from '../middleware/authMiddleware.js';
+import { requireActiveSubscription, enforceLimit } from '../middleware/subscriptionMiddleware.js';
 import User from '../models/User.js';
 
 const router = express.Router();
 
+const seatCount = (tenantId) => User.countDocuments({ tenantId });
+
 router.route('/')
   .get(protect, adminOnly, getUsers)
-  .post(protect, adminOnly, verifiedOnly, createUser);
+  .post(
+    protect,
+    adminOnly,
+    verifiedOnly,
+    requireActiveSubscription,
+    enforceLimit('users', seatCount),
+    createUser
+  );
 
 // Superadmin only routes
 router.put('/:id/role', protect, superAdminOnly, async (req, res) => {

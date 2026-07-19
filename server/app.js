@@ -11,6 +11,7 @@ import categoriesRoutes from './routes/categoriesRoutes.js';
 import authRoutes from './routes/authRoutes.js';
 import activityRoutes from './routes/activityRoutes.js';
 import announcementRoutes from './routes/announcementRoutes.js';
+import billingRoutes, { webhookHandler } from './routes/billingRoutes.js';
 
 // Builds and returns the configured Express app without connecting to the
 // database or opening a listener. Kept separate from server.js so tests can
@@ -22,6 +23,12 @@ export default function createApp() {
   app.use(helmet());
   // Lock CORS to the known client origin in production; fall back to permissive in dev.
   app.use(cors({ origin: process.env.CLIENT_URL || true, credentials: true }));
+
+  // MUST precede express.json(). Stripe signs the exact bytes it sent, so the
+  // webhook needs the raw body — parsing to JSON first and re-serialising
+  // produces different bytes and every signature check fails.
+  app.post('/api/billing/webhook', express.raw({ type: 'application/json' }), webhookHandler);
+
   app.use(express.json({ limit: '10kb' }));
   app.use(mongoSanitize());
 
@@ -51,6 +58,7 @@ export default function createApp() {
   app.use('/api/auth', authRoutes);
   app.use('/api/activity', activityRoutes);
   app.use('/api/announcements', announcementRoutes);
+  app.use('/api/billing', billingRoutes);
 
   return app;
 }

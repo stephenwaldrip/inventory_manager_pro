@@ -415,3 +415,120 @@ describe('entitlement reporting', () => {
     assert.equal(res.body.canWrite, true);
   });
 });
+
+// Guards the whole surface, not one resource. The first version of this
+// feature gated only materials while the banner claimed all changes were
+// disabled, so every write route is asserted here by construction.
+describe('read-only lockout covers every resource', () => {
+  const lapse = async (email) => {
+    const org = await orgOf(email);
+    await Organization.findByIdAndUpdate(org._id, {
+      stripeSubscriptionId: 'sub_dead',
+      subscriptionStatus: 'canceled',
+      plan: 'pro',
+    });
+    return org;
+  };
+
+  const WRITES = [
+    ['POST', '/api/materials', { name: 'M', type: 'T', quantity: 1 }],
+    ['POST', '/api/locations', { name: 'L' }],
+    ['POST', '/api/categories', { name: 'C' }],
+    ['POST', '/api/announcements', { title: 'A', message: 'B' }],
+    ['POST', '/api/users', { name: 'U', email: 'newseat@example.com', role: 'user' }],
+  ];
+
+  for (const [method, path, payload] of WRITES) {
+    test(`${method} ${path} is refused when the subscription has lapsed`, async () => {
+      const { token, email } = await registerOrg();
+      await lapse(email);
+
+      const res = await request(app)
+        .post(path)
+        .set('Authorization', `Bearer ${token}`)
+        .send(payload);
+
+      assert.equal(res.status, 402, `${path} must be gated`);
+      assert.equal(res.body.subscriptionRequired, true);
+    });
+  }
+
+  const READS = ['/api/materials', '/api/locations', '/api/categories', '/api/announcements', '/api/users'];
+
+  for (const path of READS) {
+    test(`GET ${path} still works when the subscription has lapsed`, async () => {
+      const { token, email } = await registerOrg();
+      await lapse(email);
+
+      const res = await request(app).get(path).set('Authorization', `Bearer ${token}`);
+      assert.equal(res.status, 200, `${path} must stay readable`);
+    });
+  }
+
+  test('mutating an existing record is refused too, not just creating', async () => {
+    const { token, email } = await registerOrg();
+    const org = await orgOf(email);
+    const material = await Material.create({
+      name: 'Existing', type: 'Steel', tenantId: org._id, quantity: 1,
+    });
+    await lapse(email);
+
+    const update = await request(app)
+      .put(`/api/materials/${material._id}`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({ quantity: 99 });
+    assert.equal(update.status, 402);
+
+    const remove = await request(app)
+      .delete(`/api/materials/${material._id}`)
+      .set('Authorization', `Bearer ${token}`);
+    assert.equal(remove.status, 402);
+
+    // The record is untouched by either attempt.
+    const after = await Material.findById(material._id);
+    assert.equal(after.quantity, 1);
+  });
+
+  test('user management writes are refused when lapsed', async () => {
+    const { token, email } = await registerOrg();
+    const org = await orgOf(email);
+    const member = await User.create({
+      name: 'Member', email: 'member@example.com', password: 'supersecret',
+      role: 'user', tenantId: org._id, emailVerified: true,
+    });
+    await lapse(email);
+
+    for (const [method, path, payload] of [
+      ['put', `/api/users/${member._id}/role`, { role: 'admin' }],
+      ['put', `/api/users/${member._id}/status`, {}],
+      ['put', `/api/users/${member._id}`, { name: 'Renamed' }],
+      ['delete', `/api/users/${member._id}`, {}],
+    ]) {
+      const res = await request(app)[method](path)
+        .set('Authorization', `Bearer ${token}`)
+        .send(payload);
+      assert.equal(res.status, 402, `${path} must be gated`);
+    }
+
+    assert.ok(await User.findById(member._id), 'member survived every attempt');
+  });
+
+  test('billing and auth stay reachable so a lapsed org can recover', async () => {
+    const { token, email } = await registerOrg();
+    await lapse(email);
+
+    // Paying must never be gated behind having paid.
+    const sub = await request(app)
+      .get('/api/billing/subscription')
+      .set('Authorization', `Bearer ${token}`);
+    assert.equal(sub.status, 200);
+
+    const plans = await request(app).get('/api/billing/plans');
+    assert.equal(plans.status, 200);
+
+    const login = await request(app)
+      .post('/api/auth/login')
+      .send({ email, password: 'supersecret' });
+    assert.equal(login.status, 200);
+  });
+});

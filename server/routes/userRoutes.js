@@ -28,7 +28,7 @@ router.route('/')
   );
 
 // Superadmin only routes
-router.put('/:id/role', protect, superAdminOnly, async (req, res) => {
+router.put('/:id/role', protect, superAdminOnly, requireActiveSubscription, async (req, res) => {
   try {
     const { role } = req.body;
     if (!['user', 'admin'].includes(role)) {
@@ -61,16 +61,16 @@ router.put('/:id/role', protect, superAdminOnly, async (req, res) => {
   }
 });
 
-router.post('/:id/resend-invite', protect, adminOnly, verifiedOnly, resendInvite);
+router.post('/:id/resend-invite', protect, adminOnly, verifiedOnly, requireActiveSubscription, resendInvite);
 
 // Superadmins send a reset link rather than choosing a password themselves —
 // no admin-known credential, and the user is never locked out of their own account.
-router.post('/:id/send-reset', protect, superAdminOnly, verifiedOnly, sendPasswordReset);
-router.put('/:id/status', protect, superAdminOnly, toggleUserStatus);
+router.post('/:id/send-reset', protect, superAdminOnly, verifiedOnly, requireActiveSubscription, sendPasswordReset);
+router.put('/:id/status', protect, superAdminOnly, requireActiveSubscription, toggleUserStatus);
 
 // Admin and superadmin routes
 router.route('/:id')
-  .delete(protect, adminOnly, deleteUser)
-  .put(protect, superAdminOnly, updateUser);
+  .delete(protect, adminOnly, requireActiveSubscription, deleteUser)
+  .put(protect, superAdminOnly, requireActiveSubscription, updateUser);
 
 export default router;

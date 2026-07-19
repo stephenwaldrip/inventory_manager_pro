@@ -1,6 +1,7 @@
 import express from 'express';
 import Announcement from '../models/Announcement.js';
 import { protect, adminOnly } from '../middleware/authMiddleware.js';
+import { requireActiveSubscription } from '../middleware/subscriptionMiddleware.js';
 
 const router = express.Router();
 
@@ -14,7 +15,7 @@ router.get('/', protect, async (req, res) => {
   }
 });
 
-router.post('/', protect, adminOnly, async (req, res) => {
+router.post('/', protect, adminOnly, requireActiveSubscription, async (req, res) => {
   try {
     const { title, message, pinned } = req.body;
     const announcement = await Announcement.create({
@@ -30,7 +31,7 @@ router.post('/', protect, adminOnly, async (req, res) => {
   }
 });
 
-router.delete('/:id', protect, adminOnly, async (req, res) => {
+router.delete('/:id', protect, adminOnly, requireActiveSubscription, async (req, res) => {
   try {
     const deleted = await Announcement.findOneAndDelete({
       _id: req.params.id,

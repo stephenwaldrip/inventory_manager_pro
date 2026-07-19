@@ -8,17 +8,19 @@ import {
   deleteCategory,
 } from '../controllers/categoryController.js';
 import { protect } from '../middleware/authMiddleware.js';
+import { requireActiveSubscription } from '../middleware/subscriptionMiddleware.js';
 
 const router = express.Router();
 
-// All category routes require an authenticated user.
+// All category routes require an authenticated user. Reads stay open to a
+// lapsed org; every write is gated.
 router.route('/')
   .get(protect, getCategories)
-  .post(protect, createCategory);
+  .post(protect, requireActiveSubscription, createCategory);
 
 router.route('/:id')
   .get(protect, getCategoryById)
-  .put(protect, updateCategory)
-  .delete(protect, deleteCategory);
+  .put(protect, requireActiveSubscription, updateCategory)
+  .delete(protect, requireActiveSubscription, deleteCategory);
 
 export default router;

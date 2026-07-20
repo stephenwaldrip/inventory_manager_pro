@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useContext } from 'react';
+import React, { useCallback, useEffect, useState, useContext } from 'react';
 import axiosInstance from '../utils/axiosInstance';
 import { AuthContext } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
@@ -17,11 +17,10 @@ const UsersPage = () => {
   // An invited user who hasn't set their password yet.
   const isPendingInvite = (u) => Boolean(u.invitedAt) && !u.emailVerified;
 
-  useEffect(() => {
-    if (isAdmin) fetchUsers();
-  }, [user, isAdmin]);
-
-  const fetchUsers = async () => {
+  // useCallback so the effect below can depend on it honestly. Without it the
+  // function is a new identity every render, and listing it as a dependency
+  // would refetch in a loop.
+  const fetchUsers = useCallback(async () => {
     try {
       const res = await axiosInstance.get('/users');
       setUsers(res.data);
@@ -34,7 +33,11 @@ const UsersPage = () => {
     } catch (err) {
       console.error('Failed to fetch users', err);
     }
-  };
+  }, [user?.email]);
+
+  useEffect(() => {
+    if (isAdmin) fetchUsers();
+  }, [isAdmin, fetchUsers]);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });

@@ -16,9 +16,12 @@ const Navbar = () => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // Close sidebar when navigating on mobile
+  // Close sidebar when navigating on mobile. Deliberately keyed on the path
+  // alone: adding isMobile would also fire this on every breakpoint crossing,
+  // which handleResize above already covers.
   useEffect(() => {
     if (isMobile) setIsOpen(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.pathname]);
 
   const handleLogout = () => {

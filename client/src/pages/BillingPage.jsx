@@ -241,6 +241,16 @@ function BillingPage() {
           );
         })}
       </div>
+
+      <p style={{ marginTop: '24px', fontSize: '13px', color: '#94a3b8', textAlign: 'center' }}>
+        Questions about billing?{' '}
+        
+          href="mailto:support@rhyamtechco.com?subject=Billing%20question"
+          style={{ color: '#3b82f6', textDecoration: 'none' }}
+        >
+          Contact support
+        </a>
+      </p>
     </div>
   );
 }

@@ -92,6 +92,7 @@ router.post('/checkout', protect, superAdminOnly, async (req, res) => {
       // payment_method_types is deliberately omitted so Stripe can offer every
       // eligible method from Dashboard settings. Hardcoding ['card'] would lock
       // out methods that convert better.
+      allow_promotion_codes: true,
       client_reference_id: String(org._id),
       // The webhook trusts this over anything the browser reports back.
       subscription_data: { metadata: { organizationId: String(org._id) } },

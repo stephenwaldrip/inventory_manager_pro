@@ -6,6 +6,8 @@ import { useToast } from '../context/ToastContext';
 
 const money = (cents) => `$${(cents / 100).toFixed(0)}`;
 
+const SUPPORT_EMAIL = 'support@rhyamtechco.com';
+
 // Copy for each Stripe status. Anything unmapped falls through to a neutral
 // line rather than showing a raw status string to a customer.
 const STATUS_COPY = {
@@ -245,7 +247,7 @@ function BillingPage() {
       <p style={{ marginTop: '24px', fontSize: '13px', color: '#94a3b8', textAlign: 'center' }}>
         Questions about billing?{' '}
         
-          href="mailto:support@rhyamtechco.com?subject=Billing%20question"
+          href={`mailto:${SUPPORT_EMAIL}?subject=Billing%20question`}
           style={{ color: '#3b82f6', textDecoration: 'none' }}
         >
           Contact support

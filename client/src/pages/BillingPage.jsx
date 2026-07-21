@@ -247,7 +247,7 @@ function BillingPage() {
       <p style={{ marginTop: '24px', fontSize: '13px', color: '#94a3b8', textAlign: 'center' }}>
         Questions about billing?{' '}
         
-          href={`mailto:${SUPPORT_EMAIL}?subject=Billing%20question`}
+        <a href={`mailto:${SUPPORT_EMAIL}?subject=Billing%20question`}
           style={{ color: '#3b82f6', textDecoration: 'none' }}
         >
           Contact support

@@ -237,75 +237,76 @@ const UsersPage = () => {
       <div style={{ backgroundColor: 'white', borderRadius: '12px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', overflow: 'hidden' }}>
         <div style={{ overflowX: 'auto' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '640px' }}>
-          <thead>
-            <tr style={{ backgroundColor: '#f8fafc' }}>
-              {['Name', 'Email', 'Role', 'Status', 'Actions'].map((h) => (
-                <th key={h} style={{ padding: '12px 16px', textAlign: 'left', fontSize: '12px', fontWeight: '600', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid #e2e8f0' }}>{h}</th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {users.length === 0 ? (
-              <tr>
-                <td colSpan="5" style={{ padding: '24px', textAlign: 'center', color: '#94a3b8' }}>No users found.</td>
+            <thead>
+              <tr style={{ backgroundColor: '#f8fafc' }}>
+                {['Name', 'Email', 'Role', 'Status', 'Actions'].map((h) => (
+                  <th key={h} style={{ padding: '12px 16px', textAlign: 'left', fontSize: '12px', fontWeight: '600', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid #e2e8f0' }}>{h}</th>
+                ))}
               </tr>
-            ) : (
-              users.map((u, i) => (
-                <tr key={u._id} style={{ backgroundColor: i % 2 === 0 ? 'white' : '#f8fafc' }}>
-                  <td style={{ padding: '12px 16px', fontSize: '14px', color: '#1e293b', borderBottom: '1px solid #e2e8f0' }}>👤 {u.name || '—'}</td>
-                  <td style={{ padding: '12px 16px', fontSize: '14px', color: '#64748b', borderBottom: '1px solid #e2e8f0' }}>{u.email}</td>
-                  <td style={{ padding: '12px 16px', borderBottom: '1px solid #e2e8f0' }}>
-                    {isSuperAdmin && u.role !== 'superadmin' ? (
-                      <select value={u.role} onChange={(e) => handleRoleChange(u._id, e.target.value)} style={{ ...inputStyle, width: 'auto' }}>
-                        <option value="user">User</option>
-                        <option value="admin">Admin</option>
-                      </select>
-                    ) : (
-                      <span style={roleBadge(u.role)}>{u.role}</span>
-                    )}
-                  </td>
-                  <td style={{ padding: '12px 16px', borderBottom: '1px solid #e2e8f0' }}>
-                    <span style={{
-                      padding: '2px 10px',
-                      borderRadius: '999px',
-                      fontSize: '12px',
-                      fontWeight: '600',
-                      backgroundColor: u.active === false ? '#fee2e2' : isPendingInvite(u) ? '#fef3c7' : '#f0fdf4',
-                      color: u.active === false ? '#dc2626' : isPendingInvite(u) ? '#92400e' : '#15803d',
-                    }}>
-                      {u.active === false ? 'Inactive' : isPendingInvite(u) ? 'Invite pending' : 'Active'}
-                    </span>
-                  </td>
-                  <td style={{ padding: '12px 16px', borderBottom: '1px solid #e2e8f0' }}>
-                    {u.role !== 'superadmin' && (
-                      <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
-                        {/* Only for invites still unaccepted — the recovery
-                            path when one bounces or expires. */}
-                        {isPendingInvite(u) && (
-                          <button onClick={() => handleResendInvite(u._id)} style={btnStyle('#8b5cf6')}>Resend Invite</button>
-                        )}
-                        {/* Superadmin only buttons */}
-                        {isSuperAdmin && (
-                          <>
-                            <button onClick={() => handleEdit(u)} style={btnStyle('#3b82f6')}>Edit</button>
-                            {!isPendingInvite(u) && (
-                              <button onClick={() => handleSendReset(u._id)} style={btnStyle('#f59e0b')}>Send Reset Link</button>
-                            )}
-                            <button onClick={() => handleToggleStatus(u._id)} style={btnStyle(u.active === false ? '#22c55e' : '#94a3b8')}>
-                              {u.active === false ? 'Activate' : 'Suspend'}
-                            </button>
-                          </>
-                        )}
-                        {/* Admin and superadmin button */}
-                        <button onClick={() => handleDelete(u._id)} style={btnStyle('#ef4444')}>Delete</button>
-                      </div>
-                    )}
-                  </td>
+            </thead>
+            <tbody>
+              {users.length === 0 ? (
+                <tr>
+                  <td colSpan="5" style={{ padding: '24px', textAlign: 'center', color: '#94a3b8' }}>No users found.</td>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+              ) : (
+                users.map((u, i) => (
+                  <tr key={u._id} style={{ backgroundColor: i % 2 === 0 ? 'white' : '#f8fafc' }}>
+                    <td style={{ padding: '12px 16px', fontSize: '14px', color: '#1e293b', borderBottom: '1px solid #e2e8f0' }}>👤 {u.name || '—'}</td>
+                    <td style={{ padding: '12px 16px', fontSize: '14px', color: '#64748b', borderBottom: '1px solid #e2e8f0' }}>{u.email}</td>
+                    <td style={{ padding: '12px 16px', borderBottom: '1px solid #e2e8f0' }}>
+                      {isSuperAdmin && u.role !== 'superadmin' ? (
+                        <select value={u.role} onChange={(e) => handleRoleChange(u._id, e.target.value)} style={{ ...inputStyle, width: 'auto' }}>
+                          <option value="user">User</option>
+                          <option value="admin">Admin</option>
+                        </select>
+                      ) : (
+                        <span style={roleBadge(u.role)}>{u.role}</span>
+                      )}
+                    </td>
+                    <td style={{ padding: '12px 16px', borderBottom: '1px solid #e2e8f0' }}>
+                      <span style={{
+                        padding: '2px 10px',
+                        borderRadius: '999px',
+                        fontSize: '12px',
+                        fontWeight: '600',
+                        backgroundColor: u.active === false ? '#fee2e2' : isPendingInvite(u) ? '#fef3c7' : '#f0fdf4',
+                        color: u.active === false ? '#dc2626' : isPendingInvite(u) ? '#92400e' : '#15803d',
+                      }}>
+                        {u.active === false ? 'Inactive' : isPendingInvite(u) ? 'Invite pending' : 'Active'}
+                      </span>
+                    </td>
+                    <td style={{ padding: '12px 16px', borderBottom: '1px solid #e2e8f0' }}>
+                      {u.role !== 'superadmin' && (
+                        <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                          {/* Only for invites still unaccepted — the recovery
+                              path when one bounces or expires. */}
+                          {isPendingInvite(u) && (
+                            <button onClick={() => handleResendInvite(u._id)} style={btnStyle('#8b5cf6')}>Resend Invite</button>
+                          )}
+                          {/* Superadmin only buttons */}
+                          {isSuperAdmin && (
+                            <>
+                              <button onClick={() => handleEdit(u)} style={btnStyle('#3b82f6')}>Edit</button>
+                              {!isPendingInvite(u) && (
+                                <button onClick={() => handleSendReset(u._id)} style={btnStyle('#f59e0b')}>Send Reset Link</button>
+                              )}
+                              <button onClick={() => handleToggleStatus(u._id)} style={btnStyle(u.active === false ? '#22c55e' : '#94a3b8')}>
+                                {u.active === false ? 'Activate' : 'Suspend'}
+                              </button>
+                            </>
+                          )}
+                          {/* Admin and superadmin button */}
+                          <button onClick={() => handleDelete(u._id)} style={btnStyle('#ef4444')}>Delete</button>
+                        </div>
+                      )}
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );

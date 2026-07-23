@@ -182,7 +182,8 @@ const MaterialsPage = () => {
 
       {/* Table */}
       <div style={{ backgroundColor: 'white', borderRadius: '12px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', overflow: 'hidden' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+        <div style={{ overflowX: 'auto' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '640px' }}>
           <thead>
             <tr style={{ backgroundColor: '#f8fafc' }}>
               {['Name', 'Type', 'Quantity', 'Location', 'Category', 'Notes', 'Actions'].map((h) => (

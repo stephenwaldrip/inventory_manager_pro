@@ -150,17 +150,6 @@ router.post('/login', async (req, res) => {
       return res.status(403).json({ message: 'Account is suspended. Contact your administrator.' });
     }
 
-    try {
-      await Activity.create({
-        tenantId: user.tenantId,
-        type: 'user_login',
-        message: `"${email}" logged in`,
-        user: email,
-      });
-    } catch (actErr) {
-      console.warn('Activity failed:', actErr.message);
-    }
-
     const token = jwt.sign(
       { userId: user._id, role: user.role, email: user.email, tenantId: user.tenantId },
       process.env.JWT_SECRET,

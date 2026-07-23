@@ -40,7 +40,7 @@ const Layout = () => {
           }}>
             <span>Inventory Manager Pro</span>
             
-              <a href={`mailto:${SUPPORT_EMAIL}?subject=Inventory%20Manager%20Pro%20support`}
+            <a href={`mailto:${SUPPORT_EMAIL}?subject=Inventory%20Manager%20Pro%20support`}
               style={{ color: '#64748b', textDecoration: 'none' }}
             >
               Need help? Contact support

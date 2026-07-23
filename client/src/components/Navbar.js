@@ -132,6 +132,7 @@ const Navbar = () => {
       {/* Sidebar */}
       <div style={{
         width: '240px',
+        boxSizing: 'border-box',
         backgroundColor: '#1e293b',
         display: 'flex',
         flexDirection: 'column',

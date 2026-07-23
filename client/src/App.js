@@ -14,6 +14,7 @@ import ForgotPasswordPage from './pages/ForgotPasswordPage';
 import ResetPasswordPage from './pages/ResetPasswordPage';
 import VerifyEmailPage from './pages/VerifyEmailPage';
 import BillingPage from './pages/BillingPage';
+import InstallPrompt from './components/InstallPrompt';
 
 const PrivateRoute = ({ element }) => {
   const { isAuthenticated } = useContext(AuthContext);
@@ -24,6 +25,7 @@ function App() {
   return (
     <AuthProvider>
       <ToastProvider>
+        <InstallPrompt />
         <Router>
           <Routes>
             <Route path="/login" element={<LoginPage />} />

@@ -95,7 +95,7 @@ const Navbar = () => {
   return (
     <>
       {/* Hamburger button - mobile only */}
-      {isMobile && (
+      {isMobile && !isOpen && (
         <button
           onClick={() => setIsOpen(true)}
           style={{

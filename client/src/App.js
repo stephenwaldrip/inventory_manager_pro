@@ -1,66 +1,54 @@
-import express from 'express';
-import cors from 'cors';
-import helmet from 'helmet';
-import rateLimit from 'express-rate-limit';
-import mongoSanitize from 'express-mongo-sanitize';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { useContext } from 'react';
+import { AuthProvider, AuthContext } from './context/AuthContext';
+import { ToastProvider } from './context/ToastContext';
+import LoginPage from './pages/LoginPage';
+import RegisterPage from './pages/RegisterPage';
+import MaterialsPage from './pages/MaterialsPage';
+import UsersPage from './pages/UsersPage';
+import LocationsPage from './pages/LocationsPage';
+import CategoriesPage from './pages/CategoriesPage';
+import DashboardPage from './pages/DashboardPage';
+import Layout from './components/Layout.js';
+import ForgotPasswordPage from './pages/ForgotPasswordPage';
+import ResetPasswordPage from './pages/ResetPasswordPage';
+import VerifyEmailPage from './pages/VerifyEmailPage';
+import BillingPage from './pages/BillingPage';
+import InventoryReport from './pages/InventoryReport';
+import InstallPrompt from './components/InstallPrompt';
 
-import materialsRoutes from './routes/materialsRoutes.js';
-import locationsRoutes from './routes/locationsRoutes.js';
-import userRoutes from './routes/userRoutes.js';
-import categoriesRoutes from './routes/categoriesRoutes.js';
-import authRoutes from './routes/authRoutes.js';
-import activityRoutes from './routes/activityRoutes.js';
-import announcementRoutes from './routes/announcementRoutes.js';
-import billingRoutes, { webhookHandler } from './routes/billingRoutes.js';
-import reportsRouter from './routes/reports.js';
+const PrivateRoute = ({ element }) => {
+  const { isAuthenticated } = useContext(AuthContext);
+  return isAuthenticated ? element : <Navigate to="/login" />;
+};
 
-// Builds and returns the configured Express app without connecting to the
-// database or opening a listener. Kept separate from server.js so tests can
-// import the app and drive it in-process.
-export default function createApp() {
-  const app = express();
+function App() {
+  return (
+    <AuthProvider>
+      <ToastProvider>
+        <InstallPrompt />
+        <Router>
+          <Routes>
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/register" element={<RegisterPage />} />
+            <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+            <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
+            <Route path="/verify-email/:token" element={<VerifyEmailPage />} />
 
-  app.disable('x-powered-by');
-  app.use(helmet());
-  // Lock CORS to the known client origin in production; fall back to permissive in dev.
-  app.use(cors({ origin: process.env.CLIENT_URL || true, credentials: true }));
-
-  // MUST precede express.json(). Stripe signs the exact bytes it sent, so the
-  // webhook needs the raw body — parsing to JSON first and re-serialising
-  // produces different bytes and every signature check fails.
-  app.post('/api/billing/webhook', express.raw({ type: 'application/json' }), webhookHandler);
-
-  app.use(express.json({ limit: '10kb' }));
-  app.use(mongoSanitize());
-
-  // Throttle auth endpoints to slow brute-force and reset-spam.
-  // Disabled under test so a suite of auth requests isn't blocked by the limit.
-  if (process.env.NODE_ENV !== 'test') {
-    const authLimiter = rateLimit({
-      windowMs: 15 * 60 * 1000, // 15 minutes
-      max: 10,
-      standardHeaders: true,
-      legacyHeaders: false,
-      message: { message: 'Too many attempts. Please try again later.' },
-    });
-    app.use('/api/auth', authLimiter);
-  }
-
-  // Health check route — keeps Render free tier awake via cron ping
-  app.get('/api/health', (req, res) => {
-    console.log(`Health check pinged at ${new Date().toISOString()}`);
-    res.json({ status: 'ok', timestamp: new Date().toISOString() });
-  });
-
-  app.use('/api/materials', materialsRoutes);
-  app.use('/api/locations', locationsRoutes);
-  app.use('/api/users', userRoutes);
-  app.use('/api/categories', categoriesRoutes);
-  app.use('/api/auth', authRoutes);
-  app.use('/api/activity', activityRoutes);
-  app.use('/api/announcements', announcementRoutes);
-  app.use('/api/billing', billingRoutes);
-  app.use('/api/reports', reportsRouter);
-
-  return app;
+            <Route element={<Layout />}>
+              <Route path="/" element={<PrivateRoute element={<DashboardPage />} />} />
+              <Route path="/materials" element={<PrivateRoute element={<MaterialsPage />} />} />
+              <Route path="/users" element={<PrivateRoute element={<UsersPage />} />} />
+              <Route path="/locations" element={<PrivateRoute element={<LocationsPage />} />} />
+              <Route path="/categories" element={<PrivateRoute element={<CategoriesPage />} />} />
+              <Route path="/billing" element={<PrivateRoute element={<BillingPage />} />} />
+              <Route path="/reports" element={<PrivateRoute element={<InventoryReport />} />} />
+            </Route>
+          </Routes>
+        </Router>
+      </ToastProvider>
+    </AuthProvider>
+  );
 }
+
+export default App;

@@ -14,6 +14,7 @@ import ForgotPasswordPage from './pages/ForgotPasswordPage';
 import ResetPasswordPage from './pages/ResetPasswordPage';
 import VerifyEmailPage from './pages/VerifyEmailPage';
 import BillingPage from './pages/BillingPage';
+import InventoryReport from './pages/InventoryReport';
 import InstallPrompt from './components/InstallPrompt';
 
 const PrivateRoute = ({ element }) => {
@@ -41,6 +42,7 @@ function App() {
               <Route path="/locations" element={<PrivateRoute element={<LocationsPage />} />} />
               <Route path="/categories" element={<PrivateRoute element={<CategoriesPage />} />} />
               <Route path="/billing" element={<PrivateRoute element={<BillingPage />} />} />
+              <Route path="/reports" element={<PrivateRoute element={<InventoryReport />} />} />
             </Route>
           </Routes>
         </Router>

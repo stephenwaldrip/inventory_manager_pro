@@ -1,18 +1,258 @@
-.report { max-width: 900px; margin: 0 auto; padding: 24px; }
-.summary { display: flex; gap: 24px; margin: 16px 0; }
-.summary div { display: flex; flex-direction: column; }
-table { width: 100%; border-collapse: collapse; font-size: 13px; }
-th, td { border-bottom: 1px solid #ddd; padding: 6px 8px; text-align: left; }
-.num { text-align: right; }
-tr.low td { background: #fff4f4; }
+/* Screen styles follow the palette already used across the app:
+   #1e293b ink, #3b82f6 accent, #ef4444 alert, #e2e8f0 rules. */
+
+.report {
+  max-width: 900px;
+  margin: 0 auto;
+  color: #1e293b;
+}
+
+.report-status {
+  padding: 24px;
+  color: #475569;
+}
+
+.report-controls {
+  display: flex;
+  align-items: flex-end;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.report-controls label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #64748b;
+}
+
+.report-controls select {
+  padding: 8px 10px;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  font-size: 14px;
+  background: #ffffff;
+  color: #1e293b;
+}
+
+.report-check {
+  flex-direction: row !important;
+  align-items: center;
+  gap: 8px !important;
+  padding-bottom: 9px;
+}
+
+.report-btn {
+  margin-left: auto;
+  padding: 9px 16px;
+  background: #3b82f6;
+  color: #ffffff;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.report-btn:hover {
+  background: #2563eb;
+}
+
+.report-btn:disabled {
+  background: #94a3b8;
+  cursor: default;
+}
+
+.report-btn:focus-visible {
+  outline: 2px solid #1e293b;
+  outline-offset: 2px;
+}
+
+.report-header h1 {
+  font-size: 24px;
+  font-weight: 700;
+  margin: 0 0 4px;
+}
+
+.report-meta {
+  margin: 0;
+  font-size: 13px;
+  color: #64748b;
+}
+
+.report-summary {
+  display: flex;
+  gap: 32px;
+  flex-wrap: wrap;
+  margin: 24px 0;
+  padding: 16px 0;
+  border-top: 1px solid #e2e8f0;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.report-summary div {
+  display: flex;
+  flex-direction: column;
+}
+
+.report-summary strong {
+  font-size: 26px;
+  font-weight: 700;
+  line-height: 1.1;
+}
+
+.report-summary span {
+  font-size: 12px;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.report-summary .is-low strong {
+  color: #ef4444;
+}
+
+.report-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.report-table th {
+  text-align: left;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #64748b;
+  border-bottom: 2px solid #cbd5e1;
+  padding: 8px;
+}
+
+.report-table td {
+  border-bottom: 1px solid #e2e8f0;
+  padding: 8px;
+}
+
+.report-table .num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.report-table tr.low td {
+  background: #fef2f2;
+}
+
+.report-table tfoot td {
+  font-weight: 700;
+  border-top: 2px solid #cbd5e1;
+  border-bottom: none;
+}
+
+.report-empty {
+  padding: 32px 8px;
+  color: #64748b;
+  font-size: 14px;
+}
+
+.report-footnote {
+  margin-top: 16px;
+  font-size: 12px;
+  color: #94a3b8;
+}
+
+/* ---------------------------------------------------------------- */
 
 @media print {
-  @page { size: letter portrait; margin: 0.5in; }
-  .no-print, nav, header.app-header, footer { display: none !important; }
-  .report { max-width: none; padding: 0; }
-  thead { display: table-header-group; }   /* repeat headers on every page */
-  tfoot { display: table-footer-group; }
-  tr { break-inside: avoid; }
-  tr.low td { background: none; }
-  tr.low td:first-child::before { content: "! "; font-weight: bold; }
+  @page {
+    size: letter portrait;
+    margin: 0.5in;
+  }
+
+  /* Layout.js sets height:100vh with overflow:hidden as inline styles, and
+     its <main> scrolls internally. Left alone, the browser prints only the
+     first screenful and silently clips everything below it. A stylesheet
+     !important outranks an inline style, which is what makes this work. */
+  html,
+  body,
+  #root,
+  #root div,
+  main {
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+  }
+
+  /* The nav, subscription banner, and layout footer are all styled inline
+     with no stable class names, so hiding them individually would break the
+     first time one is refactored. Hide everything, then re-show the report. */
+  body * {
+    visibility: hidden;
+  }
+
+  .report,
+  .report * {
+    visibility: visible;
+  }
+
+  .report {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    max-width: none;
+    padding: 0;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+
+  .report-header h1 {
+    font-size: 18pt;
+  }
+
+  .report-summary {
+    gap: 24px;
+  }
+
+  .report-summary strong {
+    font-size: 16pt;
+  }
+
+  .report-summary .is-low strong {
+    color: #000000;
+  }
+
+  .report-table {
+    font-size: 9pt;
+  }
+
+  /* Repeats column headers and the totals row on every printed page. */
+  thead {
+    display: table-header-group;
+  }
+
+  tfoot {
+    display: table-footer-group;
+  }
+
+  tr {
+    break-inside: avoid;
+  }
+
+  /* Row tinting costs ink and vanishes on mono printers, so low stock is
+     carried by a glyph in the margin instead. */
+  .report-table tr.low td {
+    background: none;
+  }
+
+  .report-table tr.low td:first-child::before {
+    content: '! ';
+    font-weight: 700;
+  }
 }

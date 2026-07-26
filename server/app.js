@@ -1,65 +1,50 @@
 import express from 'express';
-import cors from 'cors';
-import helmet from 'helmet';
-import rateLimit from 'express-rate-limit';
-import mongoSanitize from 'express-mongo-sanitize';
+import Material from '../models/Material.js';
+import { protect } from '../middleware/authMiddleware.js';
 
-import materialsRoutes from './routes/materialsRoutes.js';
-import locationsRoutes from './routes/locationsRoutes.js';
-import userRoutes from './routes/userRoutes.js';
-import categoriesRoutes from './routes/categoriesRoutes.js';
-import authRoutes from './routes/authRoutes.js';
-import activityRoutes from './routes/activityRoutes.js';
-import announcementRoutes from './routes/announcementRoutes.js';
-import billingRoutes, { webhookHandler } from './routes/billingRoutes.js';
+const router = express.Router();
 
-// Builds and returns the configured Express app without connecting to the
-// database or opening a listener. Kept separate from server.js so tests can
-// import the app and drive it in-process.
-export default function createApp() {
-  const app = express();
+// Matches the alert threshold in materialsController so the report and the
+// low-inventory emails never disagree about what counts as low.
+const LOW_STOCK_THRESHOLD = 5;
 
-  app.disable('x-powered-by');
-  app.use(helmet());
-  // Lock CORS to the known client origin in production; fall back to permissive in dev.
-  app.use(cors({ origin: process.env.CLIENT_URL || true, credentials: true }));
+router.get('/inventory', protect, async (req, res) => {
+  try {
+    const { category, lowStockOnly } = req.query;
 
-  // MUST precede express.json(). Stripe signs the exact bytes it sent, so the
-  // webhook needs the raw body — parsing to JSON first and re-serialising
-  // produces different bytes and every signature check fails.
-  app.post('/api/billing/webhook', express.raw({ type: 'application/json' }), webhookHandler);
+    const materials = await Material.find({ tenantId: req.tenantId })
+      .populate('location')
+      .populate('category')
+      .lean();
 
-  app.use(express.json({ limit: '10kb' }));
-  app.use(mongoSanitize());
+    const rows = materials
+      .map((m) => ({
+        _id: m._id,
+        name: m.name,
+        type: m.type,
+        quantity: m.quantity || 0,
+        categoryName: m.category?.name || 'Uncategorized',
+        locationName: m.location?.name || 'Unassigned',
+        isLow: (m.quantity || 0) < LOW_STOCK_THRESHOLD,
+      }))
+      .filter((r) => (category && category !== 'all' ? r.categoryName === category : true))
+      .filter((r) => (lowStockOnly === 'true' ? r.isLow : true))
+      .sort((a, b) => a.categoryName.localeCompare(b.categoryName) || a.name.localeCompare(b.name));
 
-  // Throttle auth endpoints to slow brute-force and reset-spam.
-  // Disabled under test so a suite of auth requests isn't blocked by the limit.
-  if (process.env.NODE_ENV !== 'test') {
-    const authLimiter = rateLimit({
-      windowMs: 15 * 60 * 1000, // 15 minutes
-      max: 10,
-      standardHeaders: true,
-      legacyHeaders: false,
-      message: { message: 'Too many attempts. Please try again later.' },
+    res.json({
+      generatedAt: new Date(),
+      filters: { category: category || 'all', lowStockOnly: lowStockOnly === 'true' },
+      summary: {
+        totalMaterials: rows.length,
+        totalUnits: rows.reduce((s, r) => s + r.quantity, 0),
+        lowStockCount: rows.filter((r) => r.isLow).length,
+      },
+      items: rows,
     });
-    app.use('/api/auth', authLimiter);
+  } catch (err) {
+    console.error('Inventory report failed:', err.message);
+    res.status(500).json({ message: 'Failed to build report' });
   }
+});
 
-  // Health check route — keeps Render free tier awake via cron ping
-  app.get('/api/health', (req, res) => {
-    console.log(`Health check pinged at ${new Date().toISOString()}`);
-    res.json({ status: 'ok', timestamp: new Date().toISOString() });
-  });
-
-  app.use('/api/materials', materialsRoutes);
-  app.use('/api/locations', locationsRoutes);
-  app.use('/api/users', userRoutes);
-  app.use('/api/categories', categoriesRoutes);
-  app.use('/api/auth', authRoutes);
-  app.use('/api/activity', activityRoutes);
-  app.use('/api/announcements', announcementRoutes);
-  app.use('/api/billing', billingRoutes);
-  app.use('/api/reports', require('./routes/reports'));
-
-  return app;
-}
+export default router;

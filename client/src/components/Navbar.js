@@ -35,6 +35,7 @@ const Navbar = () => {
     { path: '/locations', label: 'Locations', icon: '📍' },
     { path: '/categories', label: 'Categories', icon: '🗂️' },
     { path: '/users', label: 'Users', icon: '👥' },
+    { path: '/reports', label: 'Reports', icon: '🧾' },
     { path: '/billing', label: 'Billing', icon: '💳' },
   ];
 

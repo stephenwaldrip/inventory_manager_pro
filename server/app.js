@@ -59,6 +59,7 @@ export default function createApp() {
   app.use('/api/activity', activityRoutes);
   app.use('/api/announcements', announcementRoutes);
   app.use('/api/billing', billingRoutes);
+  app.use('/api/reports', require('./routes/reports'));
 
   return app;
 }

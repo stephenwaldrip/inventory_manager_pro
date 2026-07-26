@@ -1,0 +1,18 @@
+.report { max-width: 900px; margin: 0 auto; padding: 24px; }
+.summary { display: flex; gap: 24px; margin: 16px 0; }
+.summary div { display: flex; flex-direction: column; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th, td { border-bottom: 1px solid #ddd; padding: 6px 8px; text-align: left; }
+.num { text-align: right; }
+tr.low td { background: #fff4f4; }
+
+@media print {
+  @page { size: letter portrait; margin: 0.5in; }
+  .no-print, nav, header.app-header, footer { display: none !important; }
+  .report { max-width: none; padding: 0; }
+  thead { display: table-header-group; }   /* repeat headers on every page */
+  tfoot { display: table-footer-group; }
+  tr { break-inside: avoid; }
+  tr.low td { background: none; }
+  tr.low td:first-child::before { content: "! "; font-weight: bold; }
+}

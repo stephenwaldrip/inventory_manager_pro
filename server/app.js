@@ -1,7 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
-import rateLimit from 'express-rate-limit';
+import rateLimit, { ipKeyGenerator } from 'express-rate-limit';
 import mongoSanitize from 'express-mongo-sanitize';
 
 import materialsRoutes from './routes/materialsRoutes.js';
@@ -19,6 +19,11 @@ import reportsRouter from './routes/reports.js';
 // import the app and drive it in-process.
 export default function createApp() {
   const app = express();
+
+  // Behind Cloudflare -> Render's load balancer, so the socket peer is always a
+  // proxy. Without trusting it, req.ip is that proxy address (and express-rate-limit
+  // can't derive a stable client key), which silently defeats the auth throttle.
+  app.set('trust proxy', 1);
 
   app.disable('x-powered-by');
   app.use(helmet());
@@ -41,6 +46,13 @@ export default function createApp() {
       max: 10,
       standardHeaders: true,
       legacyHeaders: false,
+      // Key on Cloudflare's real-client header when present. Cloudflare sets it
+      // itself and overwrites any client-supplied value, so it can't be spoofed
+      // to dodge the limit; fall back to req.ip for direct/non-CF requests.
+      keyGenerator: (req) =>
+        req.headers['cf-connecting-ip']
+          ? ipKeyGenerator(req.headers['cf-connecting-ip'])
+          : ipKeyGenerator(req.ip),
       message: { message: 'Too many attempts. Please try again later.' },
     });
     app.use('/api/auth', authLimiter);

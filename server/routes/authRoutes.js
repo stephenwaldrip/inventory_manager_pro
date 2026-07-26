@@ -7,6 +7,7 @@ import Activity from '../models/Activity.js';
 import sendEmail from '../utils/sendEmail.js';
 import { html } from '../utils/html.js';
 import { generateToken, hashToken } from '../utils/tokens.js';
+import { validateNewPassword } from '../utils/passwordPolicy.js';
 import { protect } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
@@ -35,8 +36,9 @@ router.post('/register', async (req, res) => {
   if (!isNonEmptyString(email) || !isNonEmptyString(password)) {
     return res.status(400).json({ message: 'Valid email and password are required' });
   }
-  if (password.length < 8) {
-    return res.status(400).json({ message: 'Password must be at least 8 characters' });
+  const pwCheck = await validateNewPassword(password);
+  if (!pwCheck.ok) {
+    return res.status(400).json({ message: pwCheck.message });
   }
   if (!isNonEmptyString(organizationName)) {
     return res.status(400).json({ message: 'Organization name is required' });
@@ -208,8 +210,9 @@ router.post('/reset-password/:token', async (req, res) => {
   const { token } = req.params;
   const { password } = req.body;
 
-  if (!isNonEmptyString(password) || password.length < 8) {
-    return res.status(400).json({ message: 'Password must be at least 8 characters' });
+  const pwCheck = await validateNewPassword(password);
+  if (!pwCheck.ok) {
+    return res.status(400).json({ message: pwCheck.message });
   }
 
   try {

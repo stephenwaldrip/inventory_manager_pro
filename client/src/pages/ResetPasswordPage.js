@@ -17,6 +17,10 @@ function ResetPasswordPage() {
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async () => {
+    if (password.length < 8) {
+      setError('Password must be at least 8 characters');
+      return;
+    }
     if (password !== confirm) {
       setError('Passwords do not match');
       return;
@@ -94,6 +98,9 @@ function ResetPasswordPage() {
           value={confirm}
           onChange={(e) => setConfirm(e.target.value)}
         />
+        <p style={{ margin: '-4px 0 12px', fontSize: '12px', color: '#64748b' }}>
+          At least 8 characters. Passwords found in known data breaches are rejected.
+        </p>
         <button style={buttonStyle} onClick={handleSubmit} disabled={loading}>
           {loading
             ? 'Saving...'

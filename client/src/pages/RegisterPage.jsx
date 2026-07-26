@@ -80,6 +80,9 @@ const RegisterPage = () => {
           <input style={inputStyle} type="text" name="name" placeholder="Your Full Name" onChange={handleChange} required />
           <input style={inputStyle} type="email" name="email" placeholder="Email" onChange={handleChange} required />
           <input style={inputStyle} type="password" name="password" placeholder="Password (min 8 characters)" onChange={handleChange} required minLength={8} />
+          <p style={{ margin: '-6px 0 12px', fontSize: '12px', color: '#64748b' }}>
+            At least 8 characters. Passwords found in known data breaches are rejected.
+          </p>
           <button style={buttonStyle} type="submit">Create Organization</button>
         </form>
         <p style={{ textAlign: 'center', marginTop: '16px', fontSize: '13px', color: '#64748b' }}>

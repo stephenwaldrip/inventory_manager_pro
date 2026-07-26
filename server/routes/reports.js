@@ -1,6 +1,7 @@
-const express = require('express');
-const Item = require('../models/Item');
-const auth = require('../middleware/auth'); // your JWT middleware
+import express from 'express';
+import Item from '../models/Item.js';
+import auth from '../middleware/auth.js';
+
 const router = express.Router();
 
 router.get('/inventory', auth, async (req, res) => {
@@ -37,4 +38,4 @@ router.get('/inventory', auth, async (req, res) => {
   }
 });
 
-module.exports = router;
+export default router;

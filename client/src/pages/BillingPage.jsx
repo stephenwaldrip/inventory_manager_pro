@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import axiosInstance from '../utils/axiosInstance';
 import { AuthContext } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
+import { trackSubscription } from '../utils/analytics';
 
 const money = (cents) => `$${(cents / 100).toFixed(0)}`;
 
@@ -69,6 +70,9 @@ function BillingPage() {
     if (!outcome) return;
 
     if (outcome === 'success') {
+      // Record the conversion in GA before clearing the flag. Fires once —
+      // the flag is removed from the URL right after, so a refresh won't repeat.
+      trackSubscription();
       // Entitlement arrives by webhook, which may land after the redirect.
       toast.success('Payment received. Your plan will update momentarily.');
     } else if (outcome === 'cancelled') {

@@ -2,10 +2,13 @@ import { useState, useEffect } from 'react';
 import { Outlet } from 'react-router-dom';
 import Navbar from './Navbar';
 import SubscriptionBanner from './SubscriptionBanner';
+import { usePageTracking } from '../hooks/usePageTracking';
 
 const SUPPORT_EMAIL = 'support@rhyamtechco.com';
 
 const Layout = () => {
+  usePageTracking();
+
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 
   useEffect(() => {

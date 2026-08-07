@@ -1,4 +1,4 @@
-import { useContext, useEffect, useState } from 'react';
+import { useContext, useEffect, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import axiosInstance from '../utils/axiosInstance';
 import { AuthContext } from '../context/AuthContext';
@@ -39,6 +39,13 @@ function BillingPage() {
   const [interval, setInterval] = useState('month');
   const [busy, setBusy] = useState('');
 
+  // True only for the redirect back from a successful checkout. Drives the
+  // deferred Ads conversion below, which needs the real plan price.
+  const pendingConversion = useRef(false);
+  // Guards the Ads conversion so it fires exactly once, even as subscription
+  // data re-renders the component.
+  const conversionFired = useRef(false);
+
   const isOwner = user?.role === 'superadmin';
 
   useEffect(() => {
@@ -70,9 +77,11 @@ function BillingPage() {
     if (!outcome) return;
 
     if (outcome === 'success') {
-      // Record the conversion in GA before clearing the flag. Fires once —
-      // the flag is removed from the URL right after, so a refresh won't repeat.
+      // GA4 event fires now — it doesn't depend on the plan price. The Ads
+      // conversion is deferred until real subscription data loads, so we can
+      // report the actual amount (see the effect below).
       trackSubscription();
+      pendingConversion.current = true;
       // Entitlement arrives by webhook, which may land after the redirect.
       toast.success('Payment received. Your plan will update momentarily.');
     } else if (outcome === 'cancelled') {
@@ -83,6 +92,23 @@ function BillingPage() {
     setSearchParams(searchParams, { replace: true });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Fire the Google Ads conversion with the real plan price, once, after the
+  // subscription and plans have loaded. Webhook entitlement can land after the
+  // redirect, so this waits for the data rather than reading it at success time.
+  useEffect(() => {
+    if (!pendingConversion.current || conversionFired.current) return;
+    if (!subscription?.plan || plans.length === 0) return;
+
+    const plan = plans.find((p) => p.key === subscription.plan);
+    const cents = plan?.amounts?.[interval];
+    // Report dollars; omit if we somehow can't resolve a price.
+    const value = typeof cents === 'number' ? cents / 100 : undefined;
+
+    trackSubscription(value);
+    conversionFired.current = true;
+    pendingConversion.current = false;
+  }, [subscription, plans, interval]);
 
   const subscribe = async (planKey) => {
     setBusy(planKey);
@@ -250,7 +276,7 @@ function BillingPage() {
 
       <p style={{ marginTop: '24px', fontSize: '13px', color: '#94a3b8', textAlign: 'center' }}>
         Questions about billing?{' '}
-        
+
         <a href={`mailto:${SUPPORT_EMAIL}?subject=Billing%20question`}
           style={{ color: '#3b82f6', textDecoration: 'none' }}
         >

@@ -9,6 +9,7 @@ import UsersPage from './pages/UsersPage';
 import LocationsPage from './pages/LocationsPage';
 import CategoriesPage from './pages/CategoriesPage';
 import DashboardPage from './pages/DashboardPage';
+import LandingPage from './pages/LandingPage';
 import Layout from './components/Layout.js';
 import ForgotPasswordPage from './pages/ForgotPasswordPage';
 import ResetPasswordPage from './pages/ResetPasswordPage';
@@ -22,6 +23,12 @@ const PrivateRoute = ({ element }) => {
   return isAuthenticated ? element : <Navigate to="/login" />;
 };
 
+// Public route that bounces logged-in users to their dashboard
+const PublicRoute = ({ element }) => {
+  const { isAuthenticated } = useContext(AuthContext);
+  return isAuthenticated ? <Navigate to="/dashboard" /> : element;
+};
+
 function App() {
   return (
     <AuthProvider>
@@ -29,6 +36,7 @@ function App() {
         <InstallPrompt />
         <Router>
           <Routes>
+            <Route path="/" element={<PublicRoute element={<LandingPage />} />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
             <Route path="/forgot-password" element={<ForgotPasswordPage />} />
@@ -36,7 +44,7 @@ function App() {
             <Route path="/verify-email/:token" element={<VerifyEmailPage />} />
 
             <Route element={<Layout />}>
-              <Route path="/" element={<PrivateRoute element={<DashboardPage />} />} />
+              <Route path="/dashboard" element={<PrivateRoute element={<DashboardPage />} />} />
               <Route path="/materials" element={<PrivateRoute element={<MaterialsPage />} />} />
               <Route path="/users" element={<PrivateRoute element={<UsersPage />} />} />
               <Route path="/locations" element={<PrivateRoute element={<LocationsPage />} />} />
